@@ -1,6 +1,5 @@
 ---
-
-description: "Task list template for feature implementation"
+description: "Task list template for Laravel/Inertia POS SaaS feature implementation"
 ---
 
 # Tasks: [FEATURE NAME]
@@ -8,154 +7,149 @@ description: "Task list template for feature implementation"
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Tests are mandatory. Include focused PHPUnit unit/feature/integration tests for every behavior change, and include frontend/type checks when Vue or TypeScript changes.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- **[P]**: Can run in parallel because it touches different files and has no dependency on another unfinished task
+- **[Story]**: Which user story this task belongs to, such as US1, US2, or US3
 - Include exact file paths in descriptions
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- Laravel backend: `app/`, `routes/`, `database/`, `config/`
+- Inertia/Vue frontend: `resources/js/pages/`, `resources/js/components/`, `resources/js/composables/`, `resources/js/stores/`
+- Blade/print views: `resources/views/`
+- Tests: `tests/Feature/`, `tests/Unit/`
 
-<!-- 
-  ============================================================================
-  IMPORTANT: The tasks below are SAMPLE TASKS for illustration purposes only.
-  
-  The /speckit.tasks command MUST replace these with actual tasks based on:
-  - User stories from spec.md (with their priorities P1, P2, P3...)
-  - Feature requirements from plan.md
-  - Entities from data-model.md
-  - Endpoints from contracts/
-  
-  Tasks MUST be organized by user story so each story can be:
-  - Implemented independently
-  - Tested independently
-  - Delivered as an MVP increment
-  
-  DO NOT keep these sample tasks in the generated tasks.md file.
-  ============================================================================
+<!--
+  Replace all sample tasks below with concrete tasks generated from:
+  - prioritized user stories in spec.md
+  - Constitution Check in plan.md
+  - entities in data-model.md
+  - endpoints/contracts
+  - tenant, permission, audit, and operational UX requirements
 -->
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization and basic structure
+**Purpose**: Establish files, routes, migrations, permissions, and contracts shared by all stories.
 
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize [language] project with [framework] dependencies
-- [ ] T003 [P] Configure linting and formatting tools
+- [ ] T001 Confirm affected routes and generated Wayfinder actions/routes for [FEATURE]
+- [ ] T002 Create or update migrations in `database/migrations/`
+- [ ] T003 [P] Create or update enums/value objects in `app/Enums/`
+- [ ] T004 [P] Create or update permission seed data in `database/seeders/`
+- [ ] T005 [P] Create or update factories in `database/factories/`
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
+**Purpose**: Core infrastructure that MUST be complete before any user story implementation.
 
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+**CRITICAL**: No user story work can begin until this phase is complete.
 
-Examples of foundational tasks (adjust based on your project):
+- [ ] T006 Implement tenant-scoped models and relationships in `app/Models/`
+- [ ] T007 Implement Repository classes in `app/Repositories/`
+- [ ] T008 Implement shared Action classes in `app/Actions/`
+- [ ] T009 Implement policies/gates/permissions in `app/Policies/` or `app/Providers/`
+- [ ] T010 Add cross-tenant isolation tests in `tests/Feature/`
+- [ ] T011 Add permission failure tests in `tests/Feature/`
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
-
-**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+**Checkpoint**: Tenant isolation, authorization, data access, and shared actions are ready.
 
 ---
 
-## Phase 3: User Story 1 - [Title] (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - [Title] (Priority: P1) MVP
 
-**Goal**: [Brief description of what this story delivers]
+**Goal**: [Brief description of what this story delivers.]
 
-**Independent Test**: [How to verify this story works on its own]
+**Independent Test**: [How to verify this story works on its own.]
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 1
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+> Write these tests before implementation and verify they fail for the missing behavior.
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T012 [P] [US1] Unit test for [Action] in `tests/Unit/`
+- [ ] T013 [P] [US1] Feature test for [route/journey] in `tests/Feature/`
+- [ ] T014 [P] [US1] Validation and authorization failure test in `tests/Feature/`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T015 [US1] Implement [Action] in `app/Actions/`
+- [ ] T016 [US1] Implement [Repository] in `app/Repositories/`
+- [ ] T017 [US1] Implement controller/page endpoint in `app/Http/Controllers/`
+- [ ] T018 [US1] Implement Vue/Inertia page or component in `resources/js/`
+- [ ] T019 [US1] Add loading, error, responsive, and RTL states where applicable
+- [ ] T020 [US1] Run focused tests: `php artisan test --compact --filter=[testName]`
 
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
+**Checkpoint**: User Story 1 is fully functional and independently testable.
 
 ---
 
 ## Phase 4: User Story 2 - [Title] (Priority: P2)
 
-**Goal**: [Brief description of what this story delivers]
+**Goal**: [Brief description of what this story delivers.]
 
-**Independent Test**: [How to verify this story works on its own]
+**Independent Test**: [How to verify this story works on its own.]
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T021 [P] [US2] Unit test for [Action] in `tests/Unit/`
+- [ ] T022 [P] [US2] Feature test for [route/journey] in `tests/Feature/`
+- [ ] T023 [P] [US2] Edge case test for [tenant/permission/data integrity case]
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T021 [US2] Implement [Service] in src/services/[service].py
-- [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T024 [US2] Implement [Action] in `app/Actions/`
+- [ ] T025 [US2] Implement [Repository] in `app/Repositories/`
+- [ ] T026 [US2] Implement controller/page endpoint in `app/Http/Controllers/`
+- [ ] T027 [US2] Implement Vue/Inertia page or component in `resources/js/`
+- [ ] T028 [US2] Run focused tests: `php artisan test --compact --filter=[testName]`
 
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+**Checkpoint**: User Stories 1 and 2 work independently.
 
 ---
 
 ## Phase 5: User Story 3 - [Title] (Priority: P3)
 
-**Goal**: [Brief description of what this story delivers]
+**Goal**: [Brief description of what this story delivers.]
 
-**Independent Test**: [How to verify this story works on its own]
+**Independent Test**: [How to verify this story works on its own.]
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T029 [P] [US3] Unit test for [Action] in `tests/Unit/`
+- [ ] T030 [P] [US3] Feature test for [route/journey] in `tests/Feature/`
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T027 [US3] Implement [Service] in src/services/[service].py
-- [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T031 [US3] Implement [Action] in `app/Actions/`
+- [ ] T032 [US3] Implement [Repository] in `app/Repositories/`
+- [ ] T033 [US3] Implement controller/page endpoint in `app/Http/Controllers/`
+- [ ] T034 [US3] Implement Vue/Inertia page or component in `resources/js/`
+- [ ] T035 [US3] Run focused tests: `php artisan test --compact --filter=[testName]`
 
-**Checkpoint**: All user stories should now be independently functional
+**Checkpoint**: All selected user stories are independently functional.
 
 ---
 
-[Add more user story phases as needed, following the same pattern]
+[Add more user story phases as needed.]
 
 ---
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-**Purpose**: Improvements that affect multiple user stories
+**Purpose**: Improvements and verification that affect multiple stories.
 
-- [ ] TXXX [P] Documentation updates in docs/
-- [ ] TXXX Code cleanup and refactoring
-- [ ] TXXX Performance optimization across all stories
-- [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
-- [ ] TXXX Security hardening
-- [ ] TXXX Run quickstart.md validation
+- [ ] TXXX [P] Add or update audit/event/notification handling in `app/`
+- [ ] TXXX [P] Add report/cache invalidation or queued job coverage where applicable
+- [ ] TXXX [P] Run frontend checks if resources changed: `npm run types:check`
+- [ ] TXXX Run PHP formatting if PHP changed: `vendor/bin/pint --dirty --format agent`
+- [ ] TXXX Run final focused test command: `php artisan test --compact [path-or-filter]`
+- [ ] TXXX Verify migrations for feature scope
 
 ---
 
@@ -163,89 +157,41 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion
-  - User stories can then proceed in parallel (if staffed)
-  - Or sequentially in priority order (P1 → P2 → P3)
+- **Setup (Phase 1)**: No dependencies; can start immediately
+- **Foundational (Phase 2)**: Depends on setup; blocks all user stories
+- **User Stories (Phase 3+)**: Depend on foundational completion
 - **Polish (Final Phase)**: Depends on all desired user stories being complete
-
-### User Story Dependencies
-
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
-- **User Story 3 (P3)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
 
 ### Within Each User Story
 
-- Tests (if included) MUST be written and FAIL before implementation
-- Models before services
-- Services before endpoints
-- Core implementation before integration
-- Story complete before moving to next priority
+- Tests before implementation
+- Models and migrations before repositories
+- Repositories before actions that depend on them
+- Actions before controllers/pages
+- Backend routes before Wayfinder frontend calls
+- Story complete before moving to lower-priority work unless explicitly parallelized
 
 ### Parallel Opportunities
 
-- All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)
-- Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
-- All tests for a user story marked [P] can run in parallel
-- Models within a story marked [P] can run in parallel
-- Different user stories can be worked on in parallel by different team members
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
-Task: "Integration test for [user journey] in tests/integration/test_[name].py"
-
-# Launch all models for User Story 1 together:
-Task: "Create [Entity1] model in src/models/[entity1].py"
-Task: "Create [Entity2] model in src/models/[entity2].py"
-```
+- Tasks marked [P] can run in parallel when they touch different files
+- Different user stories can be developed in parallel after foundational tasks are complete
+- Tests for independent Actions can be authored in parallel
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (User Story 1 Only)
+### MVP First
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test User Story 1 independently
-5. Deploy/demo if ready
+1. Complete Setup.
+2. Complete Foundational tenant, permission, repository, and action work.
+3. Complete User Story 1.
+4. Run focused tests and validate User Story 1 independently.
+5. Continue by priority.
 
-### Incremental Delivery
+### Quality Gates
 
-1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
-3. Add User Story 2 → Test independently → Deploy/Demo
-4. Add User Story 3 → Test independently → Deploy/Demo
-5. Each story adds value without breaking previous stories
-
-### Parallel Team Strategy
-
-With multiple developers:
-
-1. Team completes Setup + Foundational together
-2. Once Foundational is done:
-   - Developer A: User Story 1
-   - Developer B: User Story 2
-   - Developer C: User Story 3
-3. Stories complete and integrate independently
-
----
-
-## Notes
-
-- [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability
-- Each user story should be independently completable and testable
-- Verify tests fail before implementing
-- Commit after each task or logical group
-- Stop at any checkpoint to validate story independently
-- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+- No story is complete without passing focused automated tests.
+- No PHP story is complete without Pint when PHP files changed.
+- No Vue/TypeScript story is complete without relevant type/lint checks.
+- No tenant-owned story is complete without cross-tenant isolation coverage.
