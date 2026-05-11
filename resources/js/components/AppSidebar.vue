@@ -1,6 +1,17 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-vue-next';
+import {
+    Link,
+} from '@inertiajs/vue3';
+import {
+    LayoutGrid,
+    ShoppingCart,
+    Package,
+    Users,
+    BarChart3,
+    Settings,
+    LifeBuoy,
+    Send
+} from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -14,33 +25,76 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import {
+    dashboard
+} from '@/routes';
+import {
+    index as posIndex
+} from '@/routes/pos';
+import {
+    index as productsIndex
+} from '@/routes/inventory/products';
+import {
+    index as customersIndex
+} from '@/routes/customers';
+import type {
+    NavItem
+} from '@/types';
+import {
+    useDirection
+} from '@/composables/useDirection';
 
-const mainNavItems: NavItem[] = [
-    {
+const {
+    direction
+} = useDirection();
+
+const mainNavItems: NavItem[] = [{
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
     },
-];
-
-const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
+        title: 'POS',
+        href: posIndex(),
+        icon: ShoppingCart,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        title: 'Products',
+        href: productsIndex(),
+        icon: Package,
+    },
+    {
+        title: 'Customers',
+        href: customersIndex(),
+        icon: Users,
+    },
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+    },
+    {
+        title: 'Settings',
+        href: '/settings/profile',
+        icon: Settings,
+    },
+];
+
+const footerNavItems: NavItem[] = [{
+        title: 'Support',
+        href: '#',
+        icon: LifeBuoy,
+    },
+    {
+        title: 'Feedback',
+        href: '#',
+        icon: Send,
     },
 ];
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" variant="inset" :side="direction === 'rtl' ? 'right' : 'left'">
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>

@@ -29,18 +29,32 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="name">Name</Label>
+                <Label for="store_name">Store name</Label>
                 <Input
-                    id="name"
+                    id="store_name"
                     type="text"
                     required
                     autofocus
                     :tabindex="1"
+                    autocomplete="organization"
+                    name="store_name"
+                    placeholder="Downtown Market"
+                />
+                <InputError :message="errors.store_name" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="owner_name">Owner name</Label>
+                <Input
+                    id="owner_name"
+                    type="text"
+                    required
+                    :tabindex="2"
                     autocomplete="name"
-                    name="name"
+                    name="owner_name"
                     placeholder="Full name"
                 />
-                <InputError :message="errors.name" />
+                <InputError :message="errors.owner_name" />
             </div>
 
             <div class="grid gap-2">
@@ -49,7 +63,7 @@ defineOptions({
                     id="email"
                     type="email"
                     required
-                    :tabindex="2"
+                    :tabindex="3"
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
@@ -62,7 +76,7 @@ defineOptions({
                 <PasswordInput
                     id="password"
                     required
-                    :tabindex="3"
+                    :tabindex="4"
                     autocomplete="new-password"
                     name="password"
                     placeholder="Password"
@@ -75,7 +89,7 @@ defineOptions({
                 <PasswordInput
                     id="password_confirmation"
                     required
-                    :tabindex="4"
+                    :tabindex="5"
                     autocomplete="new-password"
                     name="password_confirmation"
                     placeholder="Confirm password"
@@ -86,7 +100,7 @@ defineOptions({
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="5"
+                tabindex="6"
                 :disabled="processing"
                 data-test="register-user-button"
             >
@@ -100,7 +114,7 @@ defineOptions({
             <TextLink
                 :href="login()"
                 class="underline underline-offset-4"
-                :tabindex="6"
+                :tabindex="7"
                 >Log in</TextLink
             >
         </div>

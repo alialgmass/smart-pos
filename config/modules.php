@@ -172,9 +172,9 @@ return [
             'traits' => ['path' => 'Traits', 'generate' => false],
 
             // app/Http/
-            'controller' => ['path' => 'app/Http/Controllers', 'generate' => true],
-            'filter' => ['path' => 'app/Http/Middleware', 'generate' => false],
-            'request' => ['path' => 'app/Http/Requests', 'generate' => false],
+            'controller' => ['path' => 'Http/Controllers', 'generate' => true],
+            'filter' => ['path' => 'Http/Middleware', 'generate' => false],
+            'request' => ['path' => 'Http/Requests', 'generate' => false],
 
             // config/
             'config' => ['path' => 'config', 'generate' => true],

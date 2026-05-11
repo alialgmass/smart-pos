@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->loadModuleMigrations();
     }
 
     /**
@@ -46,5 +47,15 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Load database migrations from each enabled module.
+     */
+    protected function loadModuleMigrations(): void
+    {
+        foreach (glob(base_path('Modules/*/database/migrations'), GLOB_ONLYDIR) as $path) {
+            $this->loadMigrationsFrom($path);
+        }
     }
 }
