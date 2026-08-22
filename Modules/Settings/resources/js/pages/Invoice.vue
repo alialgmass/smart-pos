@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import PageHeader from '@/components/shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { Head, useForm } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     settings: {
@@ -31,41 +36,52 @@ const save = () => {
 </script>
 
 <template>
-    <Head title="Invoice Settings" />
+    <Head :title="t('settings::invoice.title')" />
 
-    <div class="flex flex-col gap-6 p-6 max-w-2xl">
-        <h1 class="text-2xl font-bold">Invoice Settings</h1>
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
+        <PageHeader
+            :title="t('settings::invoice.title')"
+            :description="t('settings::invoice.subtitle')"
+        />
 
-        <form @submit.prevent="save" class="grid gap-4">
+        <form @submit.prevent="save" class="grid gap-5 rounded-xl border bg-card p-6">
             <div class="grid gap-2">
-                <Label for="prefix">Invoice Prefix</Label>
+                <Label for="prefix">{{ t('settings::invoice.prefix') }}</Label>
                 <Input id="prefix" v-model="form.prefix" />
             </div>
             <div class="grid gap-2">
-                <Label for="format">Invoice Format</Label>
-                <Input id="format" v-model="form.format" />
-                <p class="text-xs text-muted-foreground">Use {prefix}, {year}, {month}, {seq} as placeholders</p>
+                <Label for="format">{{ t('settings::invoice.format') }}</Label>
+                <Input id="format" v-model="form.format" class="font-mono" dir="ltr" />
+                <p class="text-xs text-muted-foreground">{{ t('settings::invoice.format_hint') }}</p>
             </div>
-            <div class="flex items-center gap-2">
-                <input id="show_logo" type="checkbox" v-model="form.show_logo" class="rounded border-gray-300" />
-                <Label for="show_logo">Show logo on invoice</Label>
+            <div class="flex items-center gap-3">
+                <Checkbox
+                    id="show_logo"
+                    :checked="form.show_logo"
+                    @update:checked="(value: boolean) => (form.show_logo = value)"
+                />
+                <Label for="show_logo" class="font-normal">{{ t('settings::invoice.show_logo') }}</Label>
             </div>
-            <div class="flex items-center gap-2">
-                <input id="show_address" type="checkbox" v-model="form.show_address" class="rounded border-gray-300" />
-                <Label for="show_address">Show store address</Label>
+            <div class="flex items-center gap-3">
+                <Checkbox
+                    id="show_address"
+                    :checked="form.show_address"
+                    @update:checked="(value: boolean) => (form.show_address = value)"
+                />
+                <Label for="show_address" class="font-normal">{{ t('settings::invoice.show_address') }}</Label>
             </div>
             <div class="grid gap-2">
-                <Label for="footer_text">Footer Text</Label>
+                <Label for="footer_text">{{ t('settings::invoice.footer_text') }}</Label>
                 <textarea
                     id="footer_text"
                     v-model="form.footer_text"
-                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
                 ></textarea>
             </div>
             <div>
                 <Button type="submit" :disabled="form.processing">
-                    <Spinner v-if="form.processing" />
-                    Save
+                    <LoaderCircle v-if="form.processing" class="size-4 animate-spin" />
+                    {{ t('settings::invoice.save') }}
                 </Button>
             </div>
         </form>

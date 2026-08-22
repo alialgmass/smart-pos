@@ -10,15 +10,16 @@ class PosProductSearchRepository
     /**
      * Search products by barcode or name for POS.
      *
-     * @return Collection<int, array{id: int, name: string, barcode: string|null, price: float, cost: float, stock_qty: float, has_variants: bool}>
+     * @return Collection<int, array{id: int, name: string, barcode: string|null, price: float, cost: float, stock_qty: float, has_variants: bool, category_id: int|null}>
      */
-    public function search(int $tenantId, string $query, int $limit = 10): Collection
+    public function search(int $tenantId, string $query, int $limit = 10, ?int $categoryId = null): Collection
     {
         $productClass = Product::class;
 
         $products = $productClass::query()
             ->withoutGlobalScope('tenant')
             ->where('tenant_id', $tenantId)
+            ->when($categoryId !== null, fn ($q) => $q->where('category_id', $categoryId))
             ->where(function ($q) use ($query): void {
                 $q->where('barcode', $query)
                     ->orWhere('name', 'like', '%'.$query.'%');
@@ -26,7 +27,7 @@ class PosProductSearchRepository
             ->orderByRaw('CASE WHEN barcode = ? THEN 0 ELSE 1 END', [$query])
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'name', 'barcode', 'price', 'cost', 'stock_qty', 'has_variants']);
+            ->get(['id', 'name', 'barcode', 'price', 'cost', 'stock_qty', 'has_variants', 'category_id']);
 
         return $products;
     }

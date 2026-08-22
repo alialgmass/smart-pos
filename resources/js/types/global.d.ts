@@ -1,5 +1,14 @@
 import type { Auth } from '@/types/auth';
 
+// Ziggy global route helper...
+declare global {
+    function route(
+        name: string,
+        params?: Record<string, unknown> | number | string | [string, string],
+        absolute?: boolean,
+    ): string;
+}
+
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
     interface ImportMetaEnv {

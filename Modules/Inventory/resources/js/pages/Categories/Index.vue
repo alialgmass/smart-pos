@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +23,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { PageHeader, EmptyState, ConfirmDialog } from '@/components/shared';
 import { store, destroy } from '@/routes/inventory/categories';
 
 interface Category {
@@ -33,6 +36,8 @@ interface Category {
 const props = defineProps<{
     categories: Category[];
 }>();
+
+const { t } = useI18n();
 
 const form = useForm({
     name: '',
@@ -47,63 +52,77 @@ const createCategory = () => {
     });
 };
 
-const deleteCategory = (category: Category) => {
-    if (category.products_count > 0) {
+const categoryToDelete = ref<Category | null>(null);
+const deleting = ref(false);
+
+const deleteCategory = () => {
+    if (!categoryToDelete.value) {
         return;
     }
 
-    if (confirm(`Delete category "${category.name}"?`)) {
-        useForm({}).delete(destroy.url({ category: category.id }), {
-            preserveScroll: true,
-        });
-    }
+    deleting.value = true;
+    router.delete(destroy.url({ category: categoryToDelete.value.id }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            categoryToDelete.value = null;
+        },
+        onFinish: () => {
+            deleting.value = false;
+        },
+    });
 };
 </script>
 
 <template>
-    <Head title="Categories" />
+    <Head :title="t('inventory.categories.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Categories</h1>
+        <PageHeader :title="t('inventory.categories.title')">
+            <template #actions>
+                <Dialog>
+                    <DialogTrigger as-child>
+                        <Button>{{ t('inventory.categories.add') }}</Button>
+                    </DialogTrigger>
+                    <DialogContent class="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>{{ t('inventory.categories.createTitle') }}</DialogTitle>
+                            <DialogDescription>
+                                {{ t('inventory.categories.createDescription') }}
+                            </DialogDescription>
+                        </DialogHeader>
 
-            <Dialog>
-                <DialogTrigger as-child>
-                    <Button>Add Category</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create Category</DialogTitle>
-                        <DialogDescription>
-                            Add a new product category.
-                        </DialogDescription>
-                    </DialogHeader>
+                        <form @submit.prevent="createCategory" class="grid gap-4">
+                            <div class="grid gap-2">
+                                <Label for="name">{{ t('common.name') }}</Label>
+                                <Input id="name" v-model="form.name" required />
+                            </div>
 
-                    <form @submit.prevent="createCategory" class="grid gap-4">
-                        <div class="grid gap-2">
-                            <Label for="name">Name</Label>
-                            <Input id="name" v-model="form.name" required />
-                        </div>
+                            <DialogFooter>
+                                <Button type="submit" :disabled="form.processing">
+                                    <Spinner v-if="form.processing" />
+                                    {{ t('common.save') }}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </template>
+        </PageHeader>
 
-                        <DialogFooter>
-                            <Button type="submit" :disabled="form.processing">
-                                <Spinner v-if="form.processing" />
-                                Save
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-        </div>
+        <EmptyState
+            v-if="categories.length === 0"
+            :title="t('inventory.categories.empty')"
+            :description="t('emptyState.description')"
+        />
 
-        <div class="rounded-md border">
+        <div v-else class="rounded-md border">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Order</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Products</TableHead>
-                        <TableHead class="text-right">Actions</TableHead>
+                        <TableHead>{{ t('inventory.categories.order') }}</TableHead>
+                        <TableHead>{{ t('common.name') }}</TableHead>
+                        <TableHead>{{ t('inventory.categories.products') }}</TableHead>
+                        <TableHead class="text-right">{{ t('common.actions') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -113,17 +132,30 @@ const deleteCategory = (category: Category) => {
                         <TableCell>{{ category.products_count }}</TableCell>
                         <TableCell class="text-right">
                             <Button
-                                variant="destructive"
+                                variant="ghost"
                                 size="sm"
+                                class="text-destructive"
                                 :disabled="category.products_count > 0"
-                                @click="deleteCategory(category)"
+                                @click="categoryToDelete = category"
                             >
-                                Delete
+                                {{ t('common.delete') }}
                             </Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
         </div>
+
+        <ConfirmDialog
+            :open="categoryToDelete !== null"
+            :processing="deleting"
+            :description="
+                categoryToDelete
+                    ? t('inventory.categories.deleteConfirm', { name: categoryToDelete.name })
+                    : undefined
+            "
+            @update:open="(open: boolean) => { if (!open) categoryToDelete = null }"
+            @confirm="deleteCategory"
+        />
     </div>
 </template>

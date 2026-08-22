@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useCartStore } from '../../stores/useCartStore'
-import { useBarcodeScanner } from '../../composables/useBarcodeScanner'
-import CartSidebar from './CartSidebar.vue'
-import ProductGrid from './ProductGrid.vue'
-import PaymentModal from './PaymentModal.vue'
 import { ref } from 'vue'
+import { useBarcodeScanner } from '../../composables/useBarcodeScanner'
+import { useCartStore } from '../../stores/useCartStore'
+import CartSidebar from './CartSidebar.vue'
+import PaymentModal from './PaymentModal.vue'
+import ProductGrid from './ProductGrid.vue'
 
 const cart = useCartStore()
 const showPaymentModal = ref(false)
@@ -15,7 +15,10 @@ function onBarcodeScanned(barcode: string) {
 }
 
 function onCheckout() {
-  if (cart.itemCount.value === 0) return
+  if (cart.itemCount.value === 0) {
+return
+}
+
   showPaymentModal.value = true
 }
 
@@ -29,11 +32,11 @@ useBarcodeScanner(onBarcodeScanned)
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden bg-gray-100">
-    <div class="flex-1 flex flex-col overflow-hidden">
+  <div class="flex h-screen overflow-hidden bg-background">
+    <div class="flex flex-1 flex-col overflow-hidden">
       <ProductGrid />
     </div>
-    <div class="w-96 flex-shrink-0 border-l border-gray-300 bg-white">
+    <div class="w-96 shrink-0 border-s bg-card">
       <CartSidebar @checkout="onCheckout" />
     </div>
     <PaymentModal

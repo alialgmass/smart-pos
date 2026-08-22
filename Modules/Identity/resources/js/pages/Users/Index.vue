@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import PageHeader from '@/components/shared/PageHeader.vue';
+import PaginationLinks from '@/components/shared/PaginationLinks.vue';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
-import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -15,6 +13,15 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -23,7 +30,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import users from '@/routes/users';
+import usersRoutes from '@/routes/users';
+import { Head, useForm } from '@inertiajs/vue3';
+import { UserPlus, Users } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 interface User {
     id: number;
@@ -34,7 +44,9 @@ interface User {
     email_verified_at: string | null;
 }
 
-defineProps<{
+const { t } = useI18n();
+
+const props = defineProps<{
     users: {
         data: User[];
         meta: {
@@ -54,7 +66,7 @@ const form = useForm({
 });
 
 const createUser = () => {
-    form.post(users.store.url(), {
+    form.post(usersRoutes.store.url(), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset('password');
@@ -64,54 +76,64 @@ const createUser = () => {
 </script>
 
 <template>
-    <Head title="User Management" />
+    <Head :title="t('identity::users.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Users</h1>
+        <div class="flex items-center justify-between gap-4">
+            <PageHeader
+                :title="t('identity::users.title')"
+                :description="t('identity::users.subtitle')"
+            />
 
             <Dialog>
                 <DialogTrigger as-child>
-                    <Button>Add User</Button>
+                    <Button>
+                        <UserPlus class="size-4" />
+                        {{ t('identity::users.add_user') }}
+                    </Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Create User</DialogTitle>
+                        <DialogTitle>{{ t('identity::users.create_user') }}</DialogTitle>
                         <DialogDescription>
-                            Add a new user to your store with role assignment.
+                            {{ t('identity::users.create_user_description') }}
                         </DialogDescription>
                     </DialogHeader>
 
                     <form @submit.prevent="createUser" class="grid gap-4">
                         <div class="grid gap-2">
-                            <Label for="name">Name</Label>
+                            <Label for="name">{{ t('identity::users.name') }}</Label>
                             <Input id="name" v-model="form.name" required />
                         </div>
                         <div class="grid gap-2">
-                            <Label for="email">Email</Label>
-                            <Input id="email" type="email" v-model="form.email" required />
+                            <Label for="email">{{ t('identity::users.email') }}</Label>
+                            <Input id="email" v-model="form.email" type="email" required />
                         </div>
                         <div class="grid gap-2">
-                            <Label for="password">Password</Label>
-                            <Input id="password" type="password" v-model="form.password" required />
+                            <Label for="password">{{ t('identity::users.password') }}</Label>
+                            <Input id="password" v-model="form.password" type="password" required />
                         </div>
                         <div class="grid gap-2">
-                            <Label for="role">Role</Label>
-                            <Select id="role" v-model="form.role" required>
-                                <option
-                                    v-for="role in roles"
-                                    :key="role"
-                                    :value="role"
-                                >
-                                    {{ role }}
-                                </option>
+                            <Label for="role">{{ t('identity::users.role') }}</Label>
+                            <Select v-model="form.role" required>
+                                <SelectTrigger id="role" class="w-full">
+                                    <SelectValue :placeholder="t('identity::users.select_role')" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem
+                                        v-for="role in props.roles"
+                                        :key="role"
+                                        :value="role"
+                                    >
+                                        {{ role }}
+                                    </SelectItem>
+                                </SelectContent>
                             </Select>
                         </div>
 
                         <DialogFooter>
                             <Button type="submit" :disabled="form.processing">
-                                <Spinner v-if="form.processing" />
-                                Save
+                                {{ t('identity::users.save') }}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -119,55 +141,60 @@ const createUser = () => {
             </Dialog>
         </div>
 
-        <div class="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Verified</TableHead>
-                        <TableHead class="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow v-for="user in users.data" :key="user.id">
-                        <TableCell class="font-medium">{{ user.name }}</TableCell>
-                        <TableCell>{{ user.email }}</TableCell>
-                        <TableCell>
-                            <Badge variant="outline">
-                                {{ user.roles[0] }}
-                            </Badge>
-                        </TableCell>
-                        <TableCell>
-                            <Badge :variant="user.is_active ? 'success' : 'secondary'">
-                                {{ user.is_active ? 'Active' : 'Inactive' }}
-                            </Badge>
-                        </TableCell>
-                        <TableCell>
-                            <Badge :variant="user.email_verified_at ? 'success' : 'warning'">
-                                {{ user.email_verified_at ? 'Verified' : 'Pending' }}
-                            </Badge>
-                        </TableCell>
-                        <TableCell class="text-right">
-                            <Button variant="outline" size="sm">Edit</Button>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-        </div>
+        <EmptyState
+            v-if="props.users.data.length === 0"
+            :icon="Users"
+            :title="t('identity::users.empty_title')"
+            :description="t('identity::users.empty_description')"
+        />
 
-        <div v-if="users.meta.last_page > 1" class="flex justify-center gap-2">
-            <Link
-                v-for="page in users.meta.last_page"
-                :key="page"
-                :href="users.index.url()"
-                class="rounded-md px-3 py-1 text-sm"
-                :class="page === users.meta.current_page ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
-            >
-                {{ page }}
-            </Link>
-        </div>
+        <template v-else>
+            <div class="rounded-lg border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>{{ t('identity::users.column_name') }}</TableHead>
+                            <TableHead>{{ t('identity::users.column_email') }}</TableHead>
+                            <TableHead>{{ t('identity::users.column_role') }}</TableHead>
+                            <TableHead>{{ t('identity::users.column_status') }}</TableHead>
+                            <TableHead>{{ t('identity::users.column_verified') }}</TableHead>
+                            <TableHead class="text-end">{{ t('identity::users.column_actions') }}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="user in props.users.data" :key="user.id">
+                            <TableCell class="font-medium">{{ user.name }}</TableCell>
+                            <TableCell dir="ltr" class="text-start text-sm">{{ user.email }}</TableCell>
+                            <TableCell>
+                                <Badge variant="outline">
+                                    {{ user.roles[0] ?? t('identity::users.no_role') }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>
+                                <Badge :variant="user.is_active ? 'success' : 'secondary'">
+                                    {{ user.is_active ? t('identity::users.status_active') : t('identity::users.status_inactive') }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>
+                                <Badge :variant="user.email_verified_at ? 'success' : 'warning'">
+                                    {{ user.email_verified_at ? t('identity::users.verified_yes') : t('identity::users.verified_pending') }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell class="text-end">
+                                <Button variant="outline" size="sm">{{ t('identity::users.edit') }}</Button>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+
+            <PaginationLinks
+                v-if="props.users.meta.last_page > 1"
+                :current-page="props.users.meta.current_page"
+                :last-page="props.users.meta.last_page"
+                :total="props.users.meta.total"
+                :href-for="(page: number) => usersRoutes.index.url({ query: { page } })"
+            />
+        </template>
     </div>
 </template>

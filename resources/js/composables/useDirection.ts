@@ -2,6 +2,7 @@ import type { ComputedRef, Ref } from 'vue';
 import { computed, onMounted, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { switchMethod } from '@/routes/locale';
+import { setI18nLocale } from '@/i18n';
 
 export type Direction = 'ltr' | 'rtl';
 export type Locale = 'en' | 'ar';
@@ -42,6 +43,8 @@ function updateDirection(locale: Locale): void {
 
     document.documentElement.setAttribute('dir', dir);
     document.documentElement.setAttribute('lang', locale);
+
+    setI18nLocale(locale);
 }
 
 function getStoredLocale(): Locale | null {

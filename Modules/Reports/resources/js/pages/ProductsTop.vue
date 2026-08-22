@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import PageHeader from '@/components/shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { topProducts } from '@/routes/reports';
+import { Head, useForm } from '@inertiajs/vue3';
+import { PackageOpen } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 interface Product {
     product_id: number | null;
@@ -19,6 +23,8 @@ interface Product {
     total_qty: string;
     total_revenue: string;
 }
+
+const { t } = useI18n();
 
 const props = defineProps<{
     products: Product[];
@@ -44,46 +50,49 @@ const search = () => {
 </script>
 
 <template>
-    <Head title="Top Products Report" />
+    <Head :title="t('reports::top_products.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <h1 class="text-2xl font-bold">Top Products</h1>
+        <PageHeader :title="t('reports::top_products.title')" />
 
         <form @submit.prevent="search" class="flex flex-wrap items-end gap-4">
             <div class="grid gap-2">
-                <Label for="limit">Limit</Label>
-                <Input id="limit" type="number" v-model="form.limit" class="w-24" />
+                <Label for="limit">{{ t('reports::top_products.limit') }}</Label>
+                <Input id="limit" v-model="form.limit" type="number" class="w-24" />
             </div>
             <div class="grid gap-2">
-                <Label for="start_date">Start Date</Label>
-                <Input id="start_date" type="date" v-model="form.start_date" />
+                <Label for="start_date">{{ t('reports::top_products.start_date') }}</Label>
+                <Input id="start_date" v-model="form.start_date" type="date" />
             </div>
             <div class="grid gap-2">
-                <Label for="end_date">End Date</Label>
-                <Input id="end_date" type="date" v-model="form.end_date" />
+                <Label for="end_date">{{ t('reports::top_products.end_date') }}</Label>
+                <Input id="end_date" v-model="form.end_date" type="date" />
             </div>
-            <Button type="submit" :disabled="form.processing">Filter</Button>
+            <Button type="submit" :disabled="form.processing">{{ t('reports::top_products.filter') }}</Button>
         </form>
 
-        <div class="rounded-md border">
+        <EmptyState
+            v-if="products.length === 0"
+            :icon="PackageOpen"
+            :title="t('reports::top_products.no_data')"
+        />
+
+        <div v-else class="overflow-hidden rounded-lg border">
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>#</TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Qty Sold</TableHead>
-                        <TableHead>Revenue</TableHead>
+                        <TableHead>{{ t('reports::top_products.product') }}</TableHead>
+                        <TableHead>{{ t('reports::top_products.qty_sold') }}</TableHead>
+                        <TableHead>{{ t('reports::top_products.revenue') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow v-for="(product, index) in products" :key="product.product_id ?? index">
-                        <TableCell>{{ index + 1 }}</TableCell>
+                        <TableCell class="text-muted-foreground">{{ index + 1 }}</TableCell>
                         <TableCell class="font-medium">{{ product.name }}</TableCell>
-                        <TableCell>{{ Number(product.total_qty).toFixed(0) }}</TableCell>
-                        <TableCell>${{ Number(product.total_revenue).toFixed(2) }}</TableCell>
-                    </TableRow>
-                    <TableRow v-if="products.length === 0">
-                        <TableCell colspan="4" class="text-center text-muted-foreground">No data found</TableCell>
+                        <TableCell class="tabular-nums">{{ Number(product.total_qty).toFixed(0) }}</TableCell>
+                        <TableCell class="font-mono tabular-nums">${{ Number(product.total_revenue).toFixed(2) }}</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>

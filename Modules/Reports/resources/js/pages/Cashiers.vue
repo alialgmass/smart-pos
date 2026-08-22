@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import PageHeader from '@/components/shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { cashiers } from '@/routes/reports';
+import { Head, useForm } from '@inertiajs/vue3';
+import { UserRound } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 interface CashierRow {
     user_id: number;
@@ -20,6 +24,8 @@ interface CashierRow {
     total_sales: string;
     average_sale: string;
 }
+
+const { t } = useI18n();
 
 const props = defineProps<{
     report: CashierRow[];
@@ -45,46 +51,49 @@ const search = () => {
 </script>
 
 <template>
-    <Head title="Cashier Report" />
+    <Head :title="t('reports::cashiers.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <h1 class="text-2xl font-bold">Cashier Performance</h1>
+        <PageHeader :title="t('reports::cashiers.title')" />
 
         <form @submit.prevent="search" class="flex flex-wrap items-end gap-4">
             <div class="grid gap-2">
-                <Label for="user_id">User ID</Label>
-                <Input id="user_id" type="number" v-model="form.user_id" class="w-24" />
+                <Label for="user_id">{{ t('reports::cashiers.user_id') }}</Label>
+                <Input id="user_id" v-model="form.user_id" type="number" class="w-24" />
             </div>
             <div class="grid gap-2">
-                <Label for="start_date">Start Date</Label>
-                <Input id="start_date" type="date" v-model="form.start_date" />
+                <Label for="start_date">{{ t('reports::cashiers.start_date') }}</Label>
+                <Input id="start_date" v-model="form.start_date" type="date" />
             </div>
             <div class="grid gap-2">
-                <Label for="end_date">End Date</Label>
-                <Input id="end_date" type="date" v-model="form.end_date" />
+                <Label for="end_date">{{ t('reports::cashiers.end_date') }}</Label>
+                <Input id="end_date" v-model="form.end_date" type="date" />
             </div>
-            <Button type="submit" :disabled="form.processing">Filter</Button>
+            <Button type="submit" :disabled="form.processing">{{ t('reports::cashiers.filter') }}</Button>
         </form>
 
-        <div class="rounded-md border">
+        <EmptyState
+            v-if="report.length === 0"
+            :icon="UserRound"
+            :title="t('reports::cashiers.no_data')"
+        />
+
+        <div v-else class="overflow-hidden rounded-lg border">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Cashier</TableHead>
-                        <TableHead>Transactions</TableHead>
-                        <TableHead>Total Sales</TableHead>
-                        <TableHead>Avg Sale</TableHead>
+                        <TableHead>{{ t('reports::cashiers.cashier') }}</TableHead>
+                        <TableHead>{{ t('reports::cashiers.transactions') }}</TableHead>
+                        <TableHead>{{ t('reports::cashiers.total_sales') }}</TableHead>
+                        <TableHead>{{ t('reports::cashiers.avg_sale') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow v-for="row in report" :key="row.user_id">
                         <TableCell class="font-medium">{{ row.user_name }}</TableCell>
-                        <TableCell>{{ row.transaction_count }}</TableCell>
-                        <TableCell>${{ Number(row.total_sales).toFixed(2) }}</TableCell>
-                        <TableCell>${{ Number(row.average_sale).toFixed(2) }}</TableCell>
-                    </TableRow>
-                    <TableRow v-if="report.length === 0">
-                        <TableCell colspan="4" class="text-center text-muted-foreground">No data found</TableCell>
+                        <TableCell class="tabular-nums">{{ row.transaction_count }}</TableCell>
+                        <TableCell class="font-mono tabular-nums">${{ Number(row.total_sales).toFixed(2) }}</TableCell>
+                        <TableCell class="font-mono tabular-nums">${{ Number(row.average_sale).toFixed(2) }}</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>

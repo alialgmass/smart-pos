@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import PageHeader from '@/components/shared/PageHeader.vue';
+import PaginationLinks from '@/components/shared/PaginationLinks.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +13,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { index as indexRoute } from '@/routes/sales';
+import { Head } from '@inertiajs/vue3';
+import { ReceiptText } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 interface Sale {
     id: number;
@@ -23,26 +28,33 @@ interface Sale {
     items_count?: number;
 }
 
+const { t, te } = useI18n();
+
 const props = defineProps<{
     sales: {
         data: Sale[];
         current_page: number;
         last_page: number;
-        total: number;
+        per_page?: number;
+        total?: number;
     };
 }>();
 
-const paymentLabels: Record<number, string> = {
-    1: 'Cash',
-    2: 'Card',
-    3: 'Mixed',
-    4: 'Deferred',
+const paymentLabel = (method: number): string => {
+    const key = `sales::sales.payment_${['cash', 'card', 'mixed', 'deferred'][method - 1]}`;
+
+    return te(key) ? t(key) : '—';
 };
 
-const statusLabels: Record<number, string> = {
-    1: 'Completed',
-    2: 'Refunded',
-    3: 'Partial Refund',
+const statusLabel = (status: number): string => {
+    const map: Record<number, string> = {
+        1: 'sales::sales.status_completed',
+        2: 'sales::sales.status_refunded',
+        3: 'sales::sales.status_partial_refund',
+    };
+    const key = map[status];
+
+    return key && te(key) ? t(key) : t('sales::sales.unknown');
 };
 
 const statusVariant = (status: number) => {
@@ -56,24 +68,32 @@ const statusVariant = (status: number) => {
 </script>
 
 <template>
-    <Head title="Sales" />
+    <Head :title="t('sales::sales.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Sales History</h1>
-        </div>
+        <PageHeader
+            :title="t('sales::sales.title')"
+            :description="t('sales::sales.subtitle')"
+        />
 
-        <div class="rounded-md border">
+        <EmptyState
+            v-if="props.sales.data.length === 0"
+            :icon="ReceiptText"
+            :title="t('sales::sales.no_sales_title')"
+            :description="t('sales::sales.no_sales_description')"
+        />
+
+        <div v-else class="rounded-lg border">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Invoice</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Cashier</TableHead>
-                        <TableHead>Payment</TableHead>
-                        <TableHead class="text-right">Total</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead class="text-right">Actions</TableHead>
+                        <TableHead>{{ t('sales::sales.invoice') }}</TableHead>
+                        <TableHead>{{ t('sales::sales.date') }}</TableHead>
+                        <TableHead>{{ t('sales::sales.cashier') }}</TableHead>
+                        <TableHead>{{ t('sales::sales.payment') }}</TableHead>
+                        <TableHead class="text-end">{{ t('sales::sales.total_column') }}</TableHead>
+                        <TableHead>{{ t('sales::sales.status') }}</TableHead>
+                        <TableHead class="text-end">{{ t('sales::sales.actions') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -81,34 +101,26 @@ const statusVariant = (status: number) => {
                         <TableCell class="font-medium">{{ sale.invoice_number }}</TableCell>
                         <TableCell class="text-sm">{{ new Date(sale.created_at).toLocaleDateString() }}</TableCell>
                         <TableCell class="text-sm">{{ sale.user?.name ?? '—' }}</TableCell>
-                        <TableCell class="text-sm">{{ paymentLabels[sale.payment_method] ?? '—' }}</TableCell>
-                        <TableCell class="text-right font-mono">${{ Number(sale.total).toFixed(2) }}</TableCell>
+                        <TableCell class="text-sm">{{ paymentLabel(sale.payment_method) }}</TableCell>
+                        <TableCell class="text-end font-mono tabular-nums">${{ Number(sale.total).toFixed(2) }}</TableCell>
                         <TableCell>
-                            <Badge :variant="statusVariant(sale.status)">{{ statusLabels[sale.status] ?? 'Unknown' }}</Badge>
+                            <Badge :variant="statusVariant(sale.status)">{{ statusLabel(sale.status) }}</Badge>
                         </TableCell>
-                        <TableCell class="text-right">
-                            <Button variant="outline" size="sm">View</Button>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow v-if="sales.data.length === 0">
-                        <TableCell colspan="7" class="text-center text-muted-foreground py-8">
-                            No sales yet
+                        <TableCell class="text-end">
+                            <Button variant="outline" size="sm">{{ t('sales::sales.view') }}</Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
         </div>
 
-        <div v-if="sales.last_page > 1" class="flex justify-center gap-2">
-            <Link
-                v-for="page in sales.last_page"
-                :key="page"
-                :href="indexRoute.url({ query: { page } })"
-                class="rounded-md px-3 py-1 text-sm"
-                :class="page === sales.current_page ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
-            >
-                {{ page }}
-            </Link>
-        </div>
+        <PaginationLinks
+            v-if="props.sales.last_page > 1"
+            :current-page="props.sales.current_page"
+            :last-page="props.sales.last_page"
+            :total="props.sales.total"
+            :per-page="props.sales.per_page"
+            :href-for="(page: number) => indexRoute.url({ query: { page } })"
+        />
     </div>
 </template>

@@ -1,0 +1,29 @@
+{
+    "users": {
+        "title": "Users",
+        "subtitle": "Manage staff accounts and their roles.",
+        "add_user": "Add User",
+        "create_user": "Create User",
+        "create_user_description": "Add a new user to your store with role assignment.",
+        "name": "Name",
+        "email": "Email",
+        "password": "Password",
+        "role": "Role",
+        "select_role": "Select a role",
+        "save": "Save",
+        "column_name": "Name",
+        "column_email": "Email",
+        "column_role": "Role",
+        "column_status": "Status",
+        "column_verified": "Verified",
+        "column_actions": "Actions",
+        "status_active": "Active",
+        "status_inactive": "Inactive",
+        "verified_yes": "Verified",
+        "verified_pending": "Pending",
+        "edit": "Edit",
+        "no_role": "No role",
+        "empty_title": "No users found",
+        "empty_description": "Staff accounts will appear here once created."
+    }
+}

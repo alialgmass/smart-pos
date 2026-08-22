@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, router, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
     Table,
     TableBody,
@@ -10,6 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import { PageHeader, ConfirmDialog } from '@/components/shared'
 
 interface Product {
     id: number
@@ -39,6 +44,8 @@ const props = defineProps<{
     variants: Variant[]
 }>()
 
+const { t } = useI18n()
+
 const form = useForm({
     name: '',
     sku: '',
@@ -56,13 +63,25 @@ const addVariant = () => {
     })
 }
 
-const deleteVariant = (variant: Variant) => {
-    if (confirm('Delete this variant?')) {
-        useForm({}).delete(
-            `/inventory/products/${props.product.id}/variants/${variant.id}`,
-            { preserveScroll: true },
-        )
-    }
+const variantToDelete = ref<Variant | null>(null)
+const deleting = ref(false)
+
+const deleteVariant = () => {
+    if (!variantToDelete.value) return
+
+    deleting.value = true
+    router.delete(
+        `/inventory/products/${props.product.id}/variants/${variantToDelete.value.id}`,
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                variantToDelete.value = null
+            },
+            onFinish: () => {
+                deleting.value = false
+            },
+        },
+    )
 }
 
 const totalStock = props.variants.reduce((sum, v) => sum + v.stock_qty, 0)
@@ -72,50 +91,43 @@ const avgPrice = props.variants.length
 </script>
 
 <template>
-    <Head title="Product Variants" />
+    <Head :title="t('inventory.variants.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <nav class="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                    <Link href="/inventory/products" class="hover:text-primary">Products</Link>
-                    <span>/</span>
-                    <span class="text-foreground font-medium">{{ product.name }}</span>
-                </nav>
-                <h1 class="text-2xl font-bold">Product Variants</h1>
-                <p class="text-sm text-muted-foreground">Manage product variations like size, color, or material.</p>
-            </div>
-            <div class="flex gap-2">
+        <PageHeader :title="t('inventory.variants.title')" :description="t('inventory.variants.description')">
+            <template #actions>
                 <Button variant="outline" as-child>
-                    <Link :href="'/inventory/products'">Back</Link>
+                    <Link href="/inventory/products">{{ t('common.back') }}</Link>
                 </Button>
-                <Button @click="addVariant" :disabled="form.processing">Add Variant</Button>
-            </div>
-        </div>
+                <Button as-child>
+                    <a href="#add-variant">{{ t('inventory.variants.add') }}</a>
+                </Button>
+            </template>
+        </PageHeader>
 
         <div class="rounded-md border">
             <div class="px-4 py-3 border-b flex justify-between items-center">
                 <div>
-                    <h2 class="font-semibold">Product Variants</h2>
-                    <p class="text-sm text-muted-foreground">Add variations like size, color, or material.</p>
+                    <h2 class="font-semibold">{{ t('inventory.variants.sectionTitle') }}</h2>
+                    <p class="text-sm text-muted-foreground">{{ t('inventory.variants.sectionDescription') }}</p>
                 </div>
             </div>
 
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Variant Name</TableHead>
-                        <TableHead>SKU</TableHead>
-                        <TableHead>Barcode</TableHead>
-                        <TableHead>Price (EGP)</TableHead>
-                        <TableHead>Stock</TableHead>
-                        <TableHead class="w-16">Actions</TableHead>
+                        <TableHead>{{ t('inventory.variants.variantName') }}</TableHead>
+                        <TableHead>{{ t('inventory.variants.sku') }}</TableHead>
+                        <TableHead>{{ t('inventory.products.barcode') }}</TableHead>
+                        <TableHead>{{ t('common.price') }} (EGP)</TableHead>
+                        <TableHead>{{ t('inventory.variants.stock') }}</TableHead>
+                        <TableHead class="w-16 text-right">{{ t('common.actions') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow v-if="variants.length === 0">
                         <TableCell colspan="6" class="text-center text-muted-foreground py-8">
-                            No variants yet. Add one below.
+                            {{ t('inventory.variants.empty') }}
                         </TableCell>
                     </TableRow>
                     <TableRow v-for="variant in variants" :key="variant.id">
@@ -127,13 +139,18 @@ const avgPrice = props.variants.length
                             <div class="flex items-center gap-2">
                                 <span>{{ variant.stock_qty }}</span>
                                 <Badge :variant="variant.stock_qty > 5 ? 'success' : 'warning'">
-                                    {{ variant.stock_qty > 5 ? 'In Stock' : 'Low Stock' }}
+                                    {{ variant.stock_qty > 5 ? t('inventory.variants.inStock') : t('inventory.variants.lowStock') }}
                                 </Badge>
                             </div>
                         </TableCell>
-                        <TableCell>
-                            <Button variant="ghost" size="sm" class="text-destructive" @click="deleteVariant(variant)">
-                                Delete
+                        <TableCell class="text-right">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                class="text-destructive"
+                                @click="variantToDelete = variant"
+                            >
+                                {{ t('common.delete') }}
                             </Button>
                         </TableCell>
                     </TableRow>
@@ -141,73 +158,88 @@ const avgPrice = props.variants.length
             </Table>
         </div>
 
-        <div class="rounded-md border p-4">
-            <h3 class="font-semibold mb-4">Add New Variant</h3>
+        <div id="add-variant" class="rounded-md border p-4 scroll-mt-24">
+            <h3 class="font-semibold mb-4">{{ t('inventory.variants.addNew') }}</h3>
             <form @submit.prevent="addVariant" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                    <label class="text-sm font-medium">Name</label>
-                    <input
+                <div class="grid gap-2">
+                    <Label for="variant-name">{{ t('common.name') }}</Label>
+                    <Input
+                        id="variant-name"
                         v-model="form.name"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="e.g. Small / Navy Blue"
+                        :placeholder="t('inventory.variants.namePlaceholder')"
                         required
                     />
                 </div>
-                <div>
-                    <label class="text-sm font-medium">SKU</label>
-                    <input
+                <div class="grid gap-2">
+                    <Label for="variant-sku">{{ t('inventory.variants.sku') }}</Label>
+                    <Input
+                        id="variant-sku"
                         v-model="form.sku"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-                        placeholder="e.g. TSH-NAV-S"
+                        class="font-mono"
+                        :placeholder="t('inventory.variants.skuPlaceholder')"
                     />
                 </div>
-                <div>
-                    <label class="text-sm font-medium">Barcode</label>
-                    <input
+                <div class="grid gap-2">
+                    <Label for="variant-barcode">{{ t('inventory.products.barcode') }}</Label>
+                    <Input
+                        id="variant-barcode"
                         v-model="form.barcode"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-                        placeholder="e.g. 6221234567890"
+                        class="font-mono"
+                        :placeholder="t('inventory.variants.barcodePlaceholder')"
                     />
                 </div>
-                <div>
-                    <label class="text-sm font-medium">Price (EGP)</label>
-                    <input
+                <div class="grid gap-2">
+                    <Label for="variant-price">{{ t('common.price') }} (EGP)</Label>
+                    <Input
+                        id="variant-price"
                         v-model="form.price"
                         type="number"
                         step="0.01"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        min="0"
                         placeholder="0.00"
                         required
                     />
                 </div>
-                <div>
-                    <label class="text-sm font-medium">Stock Qty</label>
-                    <input
+                <div class="grid gap-2">
+                    <Label for="variant-stock">{{ t('inventory.products.stockQty') }}</Label>
+                    <Input
+                        id="variant-stock"
                         v-model="form.stock_qty"
                         type="number"
-                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        step="1"
+                        min="0"
                         placeholder="0"
                     />
                 </div>
                 <div class="md:col-span-5 flex justify-end">
-                    <Button type="submit" :disabled="form.processing">Add Variant</Button>
+                    <Button type="submit" :disabled="form.processing">
+                        {{ t('inventory.variants.add') }}
+                    </Button>
                 </div>
             </form>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="rounded-md border p-4 bg-muted/30">
-                <p class="text-sm text-muted-foreground">Total Variations</p>
+                <p class="text-sm text-muted-foreground">{{ t('inventory.variants.totalVariations') }}</p>
                 <p class="text-3xl font-bold">{{ variants.length }}</p>
             </div>
             <div class="rounded-md border p-4 bg-muted/30">
-                <p class="text-sm text-muted-foreground">Average Price</p>
+                <p class="text-sm text-muted-foreground">{{ t('inventory.variants.averagePrice') }}</p>
                 <p class="text-3xl font-bold font-mono">{{ Number(avgPrice).toFixed(2) }} EGP</p>
             </div>
             <div class="rounded-md border p-4 bg-muted/30">
-                <p class="text-sm text-muted-foreground">Total Stock</p>
-                <p class="text-3xl font-bold font-mono">{{ totalStock }} Units</p>
+                <p class="text-sm text-muted-foreground">{{ t('inventory.variants.totalStock') }}</p>
+                <p class="text-3xl font-bold font-mono">{{ totalStock }} {{ t('inventory.variants.units') }}</p>
             </div>
         </div>
+
+        <ConfirmDialog
+            :open="variantToDelete !== null"
+            :processing="deleting"
+            :description="t('inventory.variants.deleteConfirm')"
+            @update:open="(open: boolean) => { if (!open) variantToDelete = null }"
+            @confirm="deleteVariant"
+        />
     </div>
 </template>

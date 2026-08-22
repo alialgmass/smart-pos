@@ -1,0 +1,38 @@
+{
+    "invoice": {
+        "title": "Invoice Settings",
+        "subtitle": "Configure invoice numbering and appearance.",
+        "prefix": "Invoice Prefix",
+        "format": "Invoice Format",
+        "format_hint": "Use {prefix}, {year}, {month}, {seq} as placeholders.",
+        "show_logo": "Show logo on invoice",
+        "show_address": "Show store address",
+        "footer_text": "Footer Text",
+        "save": "Save"
+    },
+    "printer": {
+        "title": "Printer Settings",
+        "subtitle": "Configure your receipt printer.",
+        "type": "Printer Type",
+        "type_thermal": "Thermal",
+        "type_a4": "A4",
+        "type_receipt": "Receipt",
+        "width": "Paper Width (mm)",
+        "auto_cut": "Auto-cut after print",
+        "copies": "Default Copies",
+        "save": "Save"
+    },
+    "tax": {
+        "title": "Tax Settings",
+        "subtitle": "Configure tax calculation for sales.",
+        "name": "Tax Name",
+        "rate": "Tax Rate (%)",
+        "apply_to": "Apply To",
+        "apply_all": "All Items",
+        "apply_food": "Food Only",
+        "apply_beverage": "Beverage Only",
+        "apply_merchandise": "Merchandise Only",
+        "enabled": "Enable tax",
+        "save": "Save"
+    }
+}

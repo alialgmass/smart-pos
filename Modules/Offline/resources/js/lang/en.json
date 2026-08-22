@@ -1,0 +1,15 @@
+{
+    "offline": {
+        "title": "Offline mode",
+        "description": "Manage offline data and sync status",
+        "connection": "Connection",
+        "online": "Online",
+        "offline_state": "Offline",
+        "pending_sync": "Pending sync",
+        "last_sync": "Last sync",
+        "never": "Never",
+        "syncing": "Syncing...",
+        "sync_pending": "Sync :n pending sale(s)",
+        "pending_sales": "Pending sales"
+    }
+}

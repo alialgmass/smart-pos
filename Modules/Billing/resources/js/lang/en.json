@@ -1,0 +1,32 @@
+{
+    "billing": {
+        "title": "Billing",
+        "description": "Manage your subscription and billing details",
+        "trial_period": "Trial period",
+        "trial_ends_on": "Your trial ends on :date. Choose a plan to continue using all features.",
+        "view_plans": "View plans",
+        "current_plan": "Current plan",
+        "plan": "Plan",
+        "status": "Status",
+        "start_date": "Start date",
+        "renewal_date": "Renewal date",
+        "available_plans": "Available plans",
+        "per_month": "per month",
+        "staff_accounts": ":n staff accounts",
+        "products_count": ":n products",
+        "status_trialing": "Trialing",
+        "status_active": "Active",
+        "status_past_due": "Past Due",
+        "status_grace": "Grace",
+        "status_read_only": "Read Only",
+        "status_cancelled": "Cancelled",
+        "status_unknown": "Unknown"
+    },
+    "pricing": {
+        "title": "Pricing plans",
+        "subtitle": "Choose the right plan for your business",
+        "month": "/month",
+        "staff_accounts": ":n staff accounts",
+        "up_to_products": "Up to :n products"
+    }
+}

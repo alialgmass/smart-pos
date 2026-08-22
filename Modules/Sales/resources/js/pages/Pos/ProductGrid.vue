@@ -1,91 +1,187 @@
 <script setup lang="ts">
-import { useCartStore } from '../../stores/useCartStore'
-import { ref } from 'vue'
+import {
+    categories as categoriesRoute,
+    search as searchProductsRoute,
+} from '@/actions/Modules/Sales/Http/Controllers/PosController';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Search, LoaderCircle } from 'lucide-vue-next';
+import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useCartStore } from '../../stores/useCartStore';
 
-const cart = useCartStore()
-const search = ref('')
-const selectedCategory = ref<number | null>(null)
-
-const products = ref<
-  Array<{
-    id: number
-    name: string
-    barcode: string | null
-    price: number
-    cost: number
-    stock_qty: number
-    category_id: number | null
-  }>
->([])
-
-const categories = ref<Array<{ id: number; name: string }>>([])
-
-// TODO: fetch products and categories from API
-
-function addToCart(product: (typeof products.value)[0]) {
-  cart.addItem(product)
+interface PosProduct {
+    id: number;
+    name: string;
+    barcode: string | null;
+    price: number;
+    cost: number;
+    stock_qty: number;
+    has_variants?: boolean;
+    category_id: number | null;
 }
+
+const { t } = useI18n();
+const cart = useCartStore();
+const search = ref('');
+const selectedCategory = ref<number | null>(null);
+const isLoading = ref(false);
+
+const products = ref<PosProduct[]>([]);
+const categories = ref<Array<{ id: number; name: string }>>([]);
+
+async function fetchCategories() {
+    const response = await fetch(categoriesRoute.url());
+
+    if (!response.ok) {
+return;
+}
+
+    categories.value = await response.json();
+}
+
+async function fetchProducts() {
+    isLoading.value = true;
+
+    try {
+        const response = await fetch(
+            searchProductsRoute.url({
+                query: {
+                    q: search.value || undefined,
+                    category_id: selectedCategory.value ?? undefined,
+                },
+            }),
+        );
+
+        if (!response.ok) {
+return;
+}
+
+        const data = (await response.json()) as Array<
+            Omit<PosProduct, 'price' | 'cost' | 'stock_qty'> & {
+                price: string | number;
+                cost: string | number;
+                stock_qty: string | number;
+            }
+        >;
+        products.value = data.map((product) => ({
+            ...product,
+            price: Number(product.price),
+            cost: Number(product.cost),
+            stock_qty: Number(product.stock_qty),
+        }));
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+let searchTimeout: ReturnType<typeof setTimeout> | undefined;
+
+watch(search, () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(fetchProducts, 300);
+});
+
+watch(selectedCategory, () => {
+    fetchProducts();
+});
+
+function addToCart(product: PosProduct) {
+    cart.addItem(product);
+}
+onMounted(() => {
+    fetchCategories();
+    fetchProducts();
+});
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
-    <div class="p-3 bg-white border-b border-gray-200">
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Search products..."
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
+    <div class="flex h-full flex-col">
+        <div class="border-b bg-card p-3">
+            <div class="relative">
+                <Search
+                    class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                    v-model="search"
+                    type="text"
+                    :placeholder="t('sales::pos.search_products')"
+                    class="ps-9"
+                    autocomplete="off"
+                />
+            </div>
+        </div>
 
-    <div class="flex gap-1 p-2 bg-gray-50 overflow-x-auto border-b border-gray-200">
-      <button
-        :class="[
-          'px-3 py-1.5 text-sm rounded-full whitespace-nowrap',
-          selectedCategory === null
-            ? 'bg-blue-600 text-white'
-            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100',
-        ]"
-        @click="selectedCategory = null"
-      >
-        All
-      </button>
-      <button
-        v-for="cat in categories"
-        :key="cat.id"
-        :class="[
-          'px-3 py-1.5 text-sm rounded-full whitespace-nowrap',
-          selectedCategory === cat.id
-            ? 'bg-blue-600 text-white'
-            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100',
-        ]"
-        @click="selectedCategory = cat.id"
-      >
-        {{ cat.name }}
-      </button>
-    </div>
+        <div class="flex gap-1 overflow-x-auto border-b bg-muted/50 p-2">
+            <button
+                :class="[
+                    'rounded-full px-3 py-1.5 text-sm whitespace-nowrap transition-colors',
+                    selectedCategory === null
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                ]"
+                @click="selectedCategory = null"
+            >
+                {{ t('sales::pos.all') }}
+            </button>
+            <button
+                v-for="cat in categories"
+                :key="cat.id"
+                :class="[
+                    'rounded-full px-3 py-1.5 text-sm whitespace-nowrap transition-colors',
+                    selectedCategory === cat.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                ]"
+                @click="selectedCategory = cat.id"
+            >
+                {{ cat.name }}
+            </button>
+        </div>
 
-    <div class="flex-1 overflow-y-auto p-3">
-      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-        <button
-          v-for="product in products"
-          :key="product.id"
-          class="bg-white rounded-lg border border-gray-200 p-2 text-center hover:shadow-md transition-shadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="product.stock_qty <= 0"
-          @click="addToCart(product)"
-        >
-          <div class="w-full aspect-square bg-gray-100 rounded-md mb-1 flex items-center justify-center text-gray-400 text-xs">
-            {{ product.name.charAt(0) }}
-          </div>
-          <p class="text-xs font-medium text-gray-800 truncate">{{ product.name }}</p>
-          <p class="text-sm font-bold text-blue-600">{{ Number(product.price).toFixed(2) }}</p>
-          <p v-if="product.stock_qty <= 0" class="text-xs text-red-500">Out of stock</p>
-        </button>
-      </div>
+        <div class="flex-1 overflow-y-auto p-3">
+            <div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                <button
+                    v-for="product in products"
+                    :key="product.id"
+                    class="group cursor-pointer rounded-lg border border-border bg-card p-2 text-center transition-all hover:border-ring hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
+                    :disabled="product.stock_qty <= 0"
+                    @click="addToCart(product)"
+                >
+                    <div
+                        class="mb-2 flex aspect-square w-full items-center justify-center rounded-md bg-muted text-lg font-semibold text-muted-foreground transition-colors group-hover:bg-accent"
+                    >
+                        {{ product.name.charAt(0) }}
+                    </div>
+                    <p class="truncate text-xs font-medium text-card-foreground">
+                        {{ product.name }}
+                    </p>
+                    <p class="mt-0.5 text-sm font-bold tabular-nums text-primary">
+                        {{ Number(product.price).toFixed(2) }}
+                    </p>
+                    <Badge
+                        v-if="product.stock_qty <= 0"
+                        variant="destructive"
+                        class="mt-1 text-[10px]"
+                    >
+                        {{ t('sales::pos.out_of_stock') }}
+                    </Badge>
+                </button>
+            </div>
 
-      <div v-if="products.length === 0" class="flex items-center justify-center h-full text-gray-400">
-        <p>Search for products or scan barcode</p>
-      </div>
+            <div
+                v-if="isLoading"
+                class="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground"
+            >
+                <LoaderCircle class="size-6 animate-spin" />
+                <p class="text-sm">{{ t('sales::pos.loading_products') }}</p>
+            </div>
+            <div
+                v-else-if="products.length === 0"
+                class="flex h-full items-center justify-center text-muted-foreground"
+            >
+                <p class="text-sm">{{ t('sales::pos.empty_grid') }}</p>
+            </div>
+        </div>
     </div>
-  </div>
 </template>

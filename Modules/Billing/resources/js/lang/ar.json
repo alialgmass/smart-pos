@@ -1,0 +1,32 @@
+{
+    "billing": {
+        "title": "الفواتير",
+        "description": "إدارة اشتراكك وبيانات الفواتير",
+        "trial_period": "فترة التجربة",
+        "trial_ends_on": "تنتهي فترتك التجريبية في :date. اختر خطة لمتابعة استخدام جميع المزايا.",
+        "view_plans": "عرض الخطط",
+        "current_plan": "الخطة الحالية",
+        "plan": "الخطة",
+        "status": "الحالة",
+        "start_date": "تاريخ البدء",
+        "renewal_date": "تاريخ التجديد",
+        "available_plans": "الخطط المتاحة",
+        "per_month": "شهرياً",
+        "staff_accounts": ":n حساب موظفين",
+        "products_count": ":n منتجات",
+        "status_trialing": "فترة تجريبية",
+        "status_active": "نشط",
+        "status_past_due": "متأخر السداد",
+        "status_grace": "فترة سماح",
+        "status_read_only": "للقراءة فقط",
+        "status_cancelled": "ملغي",
+        "status_unknown": "غير معروف"
+    },
+    "pricing": {
+        "title": "خطط الأسعار",
+        "subtitle": "اختر الخطة المناسبة لعملك",
+        "month": "/شهرياً",
+        "staff_accounts": ":n حساب موظفين",
+        "up_to_products": "حتى :n منتج"
+    }
+}

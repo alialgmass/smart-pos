@@ -1,0 +1,19 @@
+{
+    "register": {
+        "layout_title": "Create your store workspace",
+        "layout_description": "Set up the owner account and start your 14-day trial",
+        "page_title": "Register Store",
+        "store_name": "Store name",
+        "store_name_placeholder": "Downtown Market",
+        "owner_name": "Owner name",
+        "owner_name_placeholder": "Full name",
+        "email_address": "Email address",
+        "password": "Password",
+        "password_placeholder": "Password",
+        "confirm_password": "Confirm password",
+        "confirm_password_placeholder": "Confirm password",
+        "create_store": "Create store",
+        "already_registered": "Already registered?",
+        "log_in": "Log in"
+    }
+}

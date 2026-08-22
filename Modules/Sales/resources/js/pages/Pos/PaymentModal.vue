@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Spinner } from '@/components/ui/spinner'
 import { search as customerSearch } from '@/routes/customers'
 import axios from 'axios'
+import {
+    AlertCircle,
+    ArrowRight,
+    Banknote,
+    CalendarClock,
+    CheckCircle2,
+    CreditCard,
+    Info,
+    Search,
+    User,
+    Wallet,
+} from 'lucide-vue-next'
+import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 interface Customer {
     id: number
@@ -14,6 +24,8 @@ interface Customer {
     debt_balance: string
     loyalty_points: number
 }
+
+const { t } = useI18n()
 
 const props = defineProps<{
     total: number
@@ -28,6 +40,7 @@ const emit = defineEmits<{
         cardAmount?: number
         customerId?: number
         customerName?: string
+        dueDate?: string
     }]
     close: []
 }>()
@@ -39,6 +52,7 @@ const cardAmount = ref(0)
 const calculatedChange = computed(() => Math.max(0, paidAmount.value - props.total))
 const mixedRemaining = computed(() => {
     const totalPaid = (cashAmount.value || 0) + (cardAmount.value || 0)
+
     return Math.max(0, props.total - totalPaid)
 })
 
@@ -56,6 +70,7 @@ watch(customerQuery, async (query) => {
     if (activeTab.value !== DEFFERED_METHOD_ID || !query || query.length < 1) {
         customerResults.value = []
         showResults.value = false
+
         return
     }
 
@@ -94,6 +109,7 @@ function handleConfirm() {
             changeAmount: 0,
             customerId: selectedCustomer.value?.id,
             customerName: selectedCustomer.value?.name,
+            dueDate: dueDate.value || undefined,
         })
     } else if (activeTab.value === 3) {
         // Mixed payment
@@ -128,190 +144,201 @@ const canConfirm = computed(() => {
     }
 })
 
-const tabs = [
-    { id: 1, label: 'Cash', icon: 'payments' },
-    { id: 2, label: 'Card', icon: 'credit_card' },
-    { id: 3, label: 'Mixed', icon: 'account_balance_wallet' },
-    { id: 4, label: 'Deferred (آجل)', icon: 'event_repeat' },
-]
+const tabs = computed(() => [
+    { id: 1, label: t('sales::payment.cash'), icon: Banknote },
+    { id: 2, label: t('sales::payment.card'), icon: CreditCard },
+    { id: 3, label: t('sales::payment.mixed'), icon: Wallet },
+    { id: 4, label: t('sales::payment.deferred'), icon: CalendarClock },
+])
 </script>
 
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm">
-        <div class="bg-surface-container-lowest w-[700px] max-w-[95vw] rounded-xl shadow-2xl overflow-hidden flex flex-col border border-outline-variant">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="flex max-h-[92vh] w-[700px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
             <!-- Modal Header -->
-            <div class="bg-primary p-lg text-on-primary flex justify-between items-center">
+            <div class="flex items-center justify-between gap-6 bg-primary p-5 text-primary-foreground">
                 <div>
-                    <h2 class="text-headline-md font-headline-md">Payment Details</h2>
-                    <div v-if="selectedCustomer" class="flex items-center gap-sm mt-xs opacity-80">
-                        <span class="material-symbols-outlined text-[18px]">person</span>
-                        <p class="text-label-md">Customer: <span class="font-bold underline">{{ selectedCustomer.name }}</span></p>
+                    <h2 class="text-lg font-semibold">{{ t('sales::payment.title') }}</h2>
+                    <div v-if="selectedCustomer" class="mt-1.5 flex items-center gap-1.5 opacity-80">
+                        <User class="size-4" />
+                        <p class="text-sm">
+                            {{ t('sales::payment.customer') }}:
+                            <span class="font-bold underline">{{ selectedCustomer.name }}</span>
+                        </p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-label-md font-medium opacity-80">Payable Amount</p>
-                    <p class="text-display-lg font-numeric-pos leading-none">{{ Number(total).toFixed(2) }} <span class="text-headline-sm">EGP</span></p>
+                <div class="text-end">
+                    <p class="text-xs font-medium opacity-80">{{ t('sales::payment.payable_amount') }}</p>
+                    <p class="text-3xl leading-none font-bold tabular-nums">{{ Number(total).toFixed(2) }} <span class="text-base">EGP</span></p>
                 </div>
             </div>
 
             <!-- Tab Navigation -->
-            <div class="flex bg-surface-container-low border-b border-outline-variant">
+            <div class="flex border-b border-border bg-muted/50">
                 <button
                     v-for="tab in tabs"
                     :key="tab.id"
-                    class="flex-1 py-lg px-md flex flex-col items-center gap-sm transition-colors"
+                    class="flex flex-1 flex-col items-center gap-1 px-4 py-4 transition-colors"
                     :class="activeTab === tab.id
-                        ? 'border-b-4 border-primary text-primary font-bold'
-                        : 'border-b-4 border-transparent text-on-surface-variant hover:bg-surface-container'"
+                        ? 'border-b-4 border-primary text-primary'
+                        : 'border-b-4 border-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground'"
                     @click="activeTab = tab.id"
                 >
-                    <span class="material-symbols-outlined">{{ tab.icon }}</span>
-                    <span class="font-label-md">{{ tab.label }}</span>
+                    <component :is="tab.icon" class="size-5" />
+                    <span class="text-sm" :class="activeTab === tab.id ? 'font-bold' : 'font-medium'">{{ tab.label }}</span>
                 </button>
             </div>
 
             <!-- Tab Content -->
-            <div class="p-xl space-y-lg flex-grow">
+            <div class="grow space-y-5 overflow-y-auto p-6">
                 <!-- Cash Tab -->
                 <div v-if="activeTab === 1" class="space-y-4">
-                    <div class="space-y-sm">
-                        <Label class="block font-label-md text-on-surface font-bold">Amount Received</Label>
-                        <div class="relative group">
-                            <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">payments</div>
+                    <div class="space-y-1.5">
+                        <Label class="block font-bold">{{ t('sales::payment.amount_received') }}</Label>
+                        <div class="relative">
+                            <Banknote class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 v-model.number="paidAmount"
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                class="w-full rounded-xl border-2 border-input bg-background py-4 pe-12 ps-10 text-lg tabular-nums transition-colors outline-none focus:border-ring"
                                 placeholder="0.00"
                             />
-                            <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                            <span class="absolute end-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">EGP</span>
                         </div>
                     </div>
-                    <div v-if="calculatedChange > 0" class="flex items-center justify-between p-md bg-secondary-container/20 rounded-xl border border-secondary-container">
-                        <span class="font-label-md font-bold text-on-secondary-container">Change Due</span>
-                        <span class="font-numeric-pos text-secondary text-headline-sm">{{ calculatedChange.toFixed(2) }} EGP</span>
+                    <div v-if="calculatedChange > 0" class="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                        <span class="text-sm font-bold">{{ t('sales::payment.change_due') }}</span>
+                        <span class="text-lg font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">{{ calculatedChange.toFixed(2) }} EGP</span>
                     </div>
                 </div>
 
                 <!-- Card Tab -->
                 <div v-if="activeTab === 2" class="space-y-4">
-                    <div class="space-y-sm">
-                        <Label class="block font-label-md text-on-surface font-bold">Card Amount</Label>
-                        <div class="relative group">
-                            <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">credit_card</div>
+                    <div class="space-y-1.5">
+                        <Label class="block font-bold">{{ t('sales::payment.card_amount') }}</Label>
+                        <div class="relative">
+                            <CreditCard class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 v-model.number="paidAmount"
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                class="w-full rounded-xl border-2 border-input bg-background py-4 pe-12 ps-10 text-lg tabular-nums transition-colors outline-none focus:border-ring"
                                 placeholder="0.00"
                             />
-                            <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                            <span class="absolute end-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">EGP</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Mixed Tab -->
-                <div v-if="activeTab === 3" class="space-y-lg">
-                    <div class="bg-primary-container/10 p-md rounded-lg border border-primary-container/20 flex items-start gap-md">
-                        <span class="material-symbols-outlined text-primary-container">info</span>
-                        <p class="text-label-md text-on-primary-fixed-variant leading-relaxed">
-                            Split the total amount across multiple payment methods. Ensure the sum of all fields equals the total payable amount.
+                <div v-if="activeTab === 3" class="space-y-5">
+                    <div class="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                        <Info class="mt-0.5 size-4 shrink-0 text-primary" />
+                        <p class="text-sm leading-relaxed text-muted-foreground">
+                            {{ t('sales::payment.split_hint') }}
                         </p>
                     </div>
-                    <div class="grid grid-cols-2 gap-lg">
-                        <div class="space-y-sm">
-                            <Label class="block font-label-md text-on-surface font-bold">Cash Amount</Label>
-                            <div class="relative group">
-                                <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">payments</div>
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="space-y-1.5">
+                            <Label class="block font-bold">{{ t('sales::payment.cash_amount') }}</Label>
+                            <div class="relative">
+                                <Banknote class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                 <input
                                     v-model.number="cashAmount"
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                    class="w-full rounded-xl border-2 border-input bg-background py-4 pe-12 ps-10 text-lg tabular-nums transition-colors outline-none focus:border-ring"
                                     placeholder="0.00"
                                 />
-                                <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                                <span class="absolute end-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">EGP</span>
                             </div>
                         </div>
-                        <div class="space-y-sm">
-                            <Label class="block font-label-md text-on-surface font-bold">Card Amount</Label>
-                            <div class="relative group">
-                                <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">credit_card</div>
+                        <div class="space-y-1.5">
+                            <Label class="block font-bold">{{ t('sales::payment.card_amount') }}</Label>
+                            <div class="relative">
+                                <CreditCard class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                 <input
                                     v-model.number="cardAmount"
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                    class="w-full rounded-xl border-2 border-input bg-background py-4 pe-12 ps-10 text-lg tabular-nums transition-colors outline-none focus:border-ring"
                                     placeholder="0.00"
                                 />
-                                <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                                <span class="absolute end-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">EGP</span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between p-md rounded-xl"
-                        :class="mixedRemaining <= 0 ? 'bg-secondary-container/20 border border-secondary-container' : 'bg-error-container/20 border border-error-container/30'">
-                        <div class="flex items-center gap-sm">
-                            <span class="material-symbols-outlined" :class="mixedRemaining <= 0 ? 'text-secondary' : 'text-error'">
-                                {{ mixedRemaining <= 0 ? 'check_circle' : 'error' }}
-                            </span>
-                            <span class="font-label-md font-bold uppercase tracking-wide" :class="mixedRemaining <= 0 ? 'text-on-secondary-container' : 'text-on-error-container'">
-                                {{ mixedRemaining <= 0 ? 'Ready to Finalize' : 'Remaining Balance' }}
+                    <div
+                        class="flex items-center justify-between rounded-xl p-4"
+                        :class="mixedRemaining <= 0 ? 'border border-emerald-500/30 bg-emerald-500/10' : 'border border-destructive/30 bg-destructive/10'"
+                    >
+                        <div class="flex items-center gap-2">
+                            <component
+                                :is="mixedRemaining <= 0 ? CheckCircle2 : AlertCircle"
+                                class="size-4"
+                                :class="mixedRemaining <= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'"
+                            />
+                            <span
+                                class="text-sm font-bold tracking-wide uppercase"
+                                :class="mixedRemaining <= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive'"
+                            >
+                                {{ mixedRemaining <= 0 ? t('sales::payment.ready_to_finalize') : t('sales::payment.remaining_balance') }}
                             </span>
                         </div>
-                        <div class="text-right">
-                            <p class="font-numeric-pos text-headline-sm" :class="mixedRemaining <= 0 ? 'text-secondary' : 'text-error'">
-                                {{ Math.max(0, mixedRemaining).toFixed(2) }} EGP
-                            </p>
-                        </div>
+                        <p class="text-lg font-semibold tabular-nums" :class="mixedRemaining <= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive'">
+                            {{ Math.max(0, mixedRemaining).toFixed(2) }} EGP
+                        </p>
                     </div>
                 </div>
 
-                <!-- Deferred Tab (T096) -->
+                <!-- Deferred Tab -->
                 <div v-if="activeTab === DEFFERED_METHOD_ID" class="space-y-4">
-                    <div class="bg-primary-container/10 p-md rounded-lg border border-primary-container/20 flex items-start gap-md">
-                        <span class="material-symbols-outlined text-primary-container">info</span>
-                        <p class="text-label-md text-on-primary-fixed-variant leading-relaxed">
-                            Deferred payment will be recorded as a debt for this customer. Select a customer to continue.
+                    <div class="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                        <Info class="mt-0.5 size-4 shrink-0 text-primary" />
+                        <p class="text-sm leading-relaxed text-muted-foreground">
+                            {{ t('sales::payment.deferred_hint') }}
                         </p>
                     </div>
 
-                    <div class="space-y-sm">
-                        <Label class="block font-label-md text-on-surface font-bold">Customer <span class="text-error">*</span></Label>
+                    <div class="space-y-1.5">
+                        <Label class="block font-bold">
+                            {{ t('sales::payment.customer') }}
+                            <span class="text-destructive">*</span>
+                        </Label>
 
                         <div v-if="!selectedCustomer" class="relative">
                             <div class="relative">
-                                <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">search</div>
+                                <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                 <input
                                     v-model="customerQuery"
                                     type="text"
-                                    class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-body-md transition-all outline-none"
-                                    placeholder="Search by name or phone..."
+                                    class="w-full rounded-xl border-2 border-input bg-background py-4 pe-4 ps-10 transition-colors outline-none focus:border-ring"
+                                    :placeholder="t('sales::payment.search_customer')"
                                     autocomplete="off"
                                 />
                             </div>
                             <div
                                 v-if="showResults && customerQuery.length > 0"
-                                class="absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg max-h-48 overflow-y-auto z-10"
+                                class="absolute inset-x-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-xl border border-border bg-popover shadow-lg"
                             >
-                                <div v-if="searching" class="px-4 py-3 text-sm text-muted-foreground text-center">
-                                    Searching...
+                                <div v-if="searching" class="px-4 py-3 text-center text-sm text-muted-foreground">
+                                    {{ t('sales::payment.searching') }}
                                 </div>
                                 <div
                                     v-else-if="customerResults.length === 0"
-                                    class="px-4 py-3 text-sm text-muted-foreground text-center"
+                                    class="px-4 py-3 text-center text-sm text-muted-foreground"
                                 >
-                                    No customers found
+                                    {{ t('sales::payment.no_customers') }}
                                 </div>
                                 <button
                                     v-for="customer in customerResults"
                                     :key="customer.id"
-                                    class="w-full px-4 py-3 text-left text-sm hover:bg-surface-container flex items-center justify-between transition-colors"
+                                    class="flex w-full items-center justify-between px-4 py-3 text-start text-sm transition-colors hover:bg-accent"
                                     @click="selectCustomer(customer)"
                                 >
                                     <span class="font-medium">{{ customer.name }}</span>
@@ -320,9 +347,9 @@ const tabs = [
                             </div>
                         </div>
 
-                        <div v-else class="flex items-center justify-between bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant">
+                        <div v-else class="flex items-center justify-between rounded-xl border border-border bg-muted/50 px-4 py-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold">
+                                <div class="flex size-10 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
                                     {{ selectedCustomer.name.charAt(0).toUpperCase() }}
                                 </div>
                                 <div>
@@ -330,57 +357,55 @@ const tabs = [
                                     <p class="text-xs text-muted-foreground">{{ selectedCustomer.phone }}</p>
                                 </div>
                             </div>
-                            <button class="text-primary hover:underline font-label-md text-sm" @click="clearCustomer">
-                                Change
+                            <button class="text-sm text-primary hover:underline" @click="clearCustomer">
+                                {{ t('sales::payment.change') }}
                             </button>
                         </div>
                     </div>
 
-                    <div class="space-y-sm">
-                        <Label class="block font-label-md text-on-surface font-bold">Payment Due Date (Optional)</Label>
+                    <div class="space-y-1.5">
+                        <Label class="block font-bold">{{ t('sales::payment.due_date_optional') }}</Label>
                         <input
                             v-model="dueDate"
                             type="date"
-                            class="w-full px-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-body-md transition-all outline-none"
+                            class="w-full rounded-xl border-2 border-input bg-background px-4 py-4 transition-colors outline-none focus:border-ring"
                         />
                     </div>
 
-                    <div class="flex items-center justify-between p-md bg-secondary-container/20 rounded-xl border border-secondary-container">
-                        <div class="flex items-center gap-sm">
-                            <span class="material-symbols-outlined text-secondary">check_circle</span>
-                            <span class="font-label-md font-bold text-on-secondary-container uppercase tracking-wide">Ready to Record</span>
+                    <div class="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                        <div class="flex items-center gap-2">
+                            <CheckCircle2 class="size-4 text-emerald-600 dark:text-emerald-400" />
+                            <span class="text-sm font-bold tracking-wide uppercase text-emerald-700 dark:text-emerald-400">
+                                {{ t('sales::payment.ready_to_record') }}
+                            </span>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xs text-on-secondary-container font-bold uppercase">Amount to Defer</p>
-                            <p class="font-numeric-pos text-secondary text-headline-sm">{{ Number(total).toFixed(2) }} EGP</p>
+                        <div class="text-end">
+                            <p class="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-400">{{ t('sales::payment.amount_to_defer') }}</p>
+                            <p class="text-lg font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">{{ Number(total).toFixed(2) }} EGP</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Footer Actions -->
-            <div class="p-lg bg-surface-container-low border-t border-outline-variant flex gap-md">
+            <div class="flex gap-4 border-t border-border bg-muted/50 p-5">
                 <button
-                    class="flex-1 py-lg border-2 border-outline text-outline font-bold rounded-xl hover:bg-surface-container-high transition-colors active:scale-95 transition-transform"
+                    class="flex-1 rounded-xl border-2 border-border py-4 font-bold transition-all hover:bg-accent active:scale-[0.98]"
                     @click="handleClose"
                 >
-                    Cancel Transaction
+                    {{ t('sales::payment.cancel_transaction') }}
                 </button>
                 <button
-                    class="flex-[2] py-lg bg-primary text-on-primary font-bold text-headline-sm rounded-xl flex items-center justify-center gap-md shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="flex-[2] items-center justify-center gap-2 rounded-xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
                     :disabled="!canConfirm"
                     @click="handleConfirm"
                 >
-                    {{ activeTab === DEFFERED_METHOD_ID ? 'Record Debt' : 'Complete Payment' }}
-                    <span class="material-symbols-outlined">arrow_forward</span>
+                    <span class="inline-flex items-center justify-center gap-2">
+                        {{ activeTab === DEFFERED_METHOD_ID ? t('sales::payment.record_debt') : t('sales::payment.complete_payment') }}
+                        <ArrowRight class="size-5 rtl:-scale-x-100" />
+                    </span>
                 </button>
             </div>
         </div>
     </div>
 </template>
-
-<style scoped>
-.material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-</style>

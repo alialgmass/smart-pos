@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import PageHeader from '@/components/shared/PageHeader.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Head, router } from '@inertiajs/vue3';
+import { ChefHat, Printer } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 interface OrderItem {
     id: number;
@@ -22,16 +26,22 @@ interface KitchenOrder {
     items: OrderItem[];
 }
 
-const props = defineProps<{
+const { t, te } = useI18n();
+
+defineProps<{
     orders: KitchenOrder[];
 }>();
 
-const statusLabel = (status: number) => {
-    switch (status) {
-        case 2: return 'Sent';
-        case 3: return 'Ready';
-        default: return 'Unknown';
-    }
+const statusLabel = (status: number): string => {
+    if (status === 2 && te('restaurant::kitchen.status_sent')) {
+return t('restaurant::kitchen.status_sent');
+}
+
+    if (status === 3 && te('restaurant::kitchen.status_ready')) {
+return t('restaurant::kitchen.status_ready');
+}
+
+    return t('restaurant::kitchen.status_ready');
 };
 
 const statusVariant = (status: number) => {
@@ -52,26 +62,29 @@ const printTicket = (orderId: number) => {
 </script>
 
 <template>
-    <Head title="Kitchen Display" />
+    <Head :title="t('restaurant::kitchen.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Kitchen Display</h1>
+        <div class="flex items-center justify-between gap-4">
+            <PageHeader :title="t('restaurant::kitchen.title')" />
             <Badge variant="outline" class="text-sm">
-                {{ orders.length }} pending
+                {{ t('restaurant::kitchen.pending_count', { count: orders.length }) }}
             </Badge>
         </div>
 
-        <div v-if="orders.length === 0" class="py-12 text-center text-muted-foreground">
-            <p class="text-lg">All caught up!</p>
-            <p class="text-sm">No pending orders in the kitchen.</p>
-        </div>
+        <EmptyState
+            v-if="orders.length === 0"
+            :icon="ChefHat"
+            :title="t('restaurant::kitchen.all_caught_up_title')"
+            :description="t('restaurant::kitchen.all_caught_up_description')"
+        />
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card
                 v-for="order in orders"
                 :key="order.id"
-                :class="order.status === 3 ? 'border-green-500' : 'border-amber-500'"
+                class="transition-shadow hover:shadow-md"
+                :class="order.status === 3 ? 'border-emerald-500' : 'border-amber-500'"
             >
                 <CardHeader class="pb-2">
                     <div class="flex items-center justify-between">
@@ -83,7 +96,8 @@ const printTicket = (orderId: number) => {
                         </Badge>
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Table: {{ order.table?.name ?? 'N/A' }} &middot;
+                        {{ t('restaurant::kitchen.table') }}:
+                        {{ order.table?.name ?? '—' }} &middot;
                         {{ new Date(order.created_at).toLocaleTimeString() }}
                     </p>
                 </CardHeader>
@@ -99,7 +113,7 @@ const printTicket = (orderId: number) => {
                             class="flex items-center justify-between py-1"
                         >
                             <span>
-                                <span class="font-medium">{{ item.qty }}x</span>
+                                <span class="font-medium tabular-nums">{{ item.qty }}×</span>
                                 {{ item.name }}
                                 <span v-if="item.notes" class="block text-xs text-muted-foreground italic">
                                     {{ item.notes }}
@@ -115,14 +129,15 @@ const printTicket = (orderId: number) => {
                             class="flex-1"
                             @click="markReady(order.id)"
                         >
-                            Mark Ready
+                            {{ t('restaurant::kitchen.mark_ready') }}
                         </Button>
                         <Button
                             size="sm"
                             variant="outline"
                             @click="printTicket(order.id)"
                         >
-                            Print
+                            <Printer class="size-4" />
+                            {{ t('restaurant::kitchen.print') }}
                         </Button>
                     </div>
                 </CardContent>

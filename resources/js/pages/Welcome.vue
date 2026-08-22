@@ -80,7 +80,7 @@ const plans = [
 <template>
     <Head title="Welcome">
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     </Head>
 
     <div class="min-h-screen bg-background text-on-surface" :dir="dir">

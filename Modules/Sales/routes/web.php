@@ -12,6 +12,7 @@ Route::middleware(['auth', 'verified'])->prefix('pos')->name('pos.')->group(func
 
 Route::middleware(['auth', 'verified'])->prefix('api')->name('api.')->group(function () {
     Route::get('pos/search', [PosController::class, 'search'])->name('pos.search');
+    Route::get('pos/categories', [PosController::class, 'categories'])->name('pos.categories');
 });
 
 Route::middleware(['auth', 'verified'])->name('sales.')->group(function () {

@@ -1,0 +1,29 @@
+{
+    "users": {
+        "title": "المستخدمون",
+        "subtitle": "إدارة حسابات الموظفين وأدوارهم.",
+        "add_user": "إضافة مستخدم",
+        "create_user": "إنشاء مستخدم",
+        "create_user_description": "أضف مستخدماً جديداً إلى متجرك مع تعيين الدور.",
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "password": "كلمة المرور",
+        "role": "الدور",
+        "select_role": "اختر دوراً",
+        "save": "حفظ",
+        "column_name": "الاسم",
+        "column_email": "البريد الإلكتروني",
+        "column_role": "الدور",
+        "column_status": "الحالة",
+        "column_verified": "التحقق",
+        "column_actions": "إجراءات",
+        "status_active": "نشط",
+        "status_inactive": "غير نشط",
+        "verified_yes": "موثّق",
+        "verified_pending": "قيد التحقق",
+        "edit": "تعديل",
+        "no_role": "بدون دور",
+        "empty_title": "لا يوجد مستخدمون",
+        "empty_description": "ستظهر حسابات الموظفين هنا بعد إنشائها."
+    }
+}

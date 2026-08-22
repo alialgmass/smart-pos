@@ -11,10 +11,12 @@ export function useBarcodeScanner(callback: (barcode: string) => void) {
         callback(buffer)
         buffer = ''
       }
+
       return
     }
 
     const now = Date.now()
+
     if (now - lastKeyTime > threshold && buffer.length > 0) {
       buffer = ''
     }

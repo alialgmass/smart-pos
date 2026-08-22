@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import InstallAppBanner from '../components/InstallAppBanner.vue';
+import { useOfflineSync } from '../composables/useOfflineSync';
 import { db } from '../lib/db';
 import { useOfflineStore } from '../stores/useOfflineStore';
-import { useOfflineSync } from '../composables/useOfflineSync';
+
+const { t } = useI18n();
 
 const store = useOfflineStore();
 const { syncing, lastError, syncPendingSales } = useOfflineSync();
@@ -28,32 +31,32 @@ async function handleSync() {
         <InstallAppBanner />
 
         <div>
-            <h1 class="text-2xl font-bold">Offline mode</h1>
-            <p class="text-muted-foreground">Manage offline data and sync status</p>
+            <h1 class="text-2xl font-bold">{{ t('offline::offline.title') }}</h1>
+            <p class="text-muted-foreground">{{ t('offline::offline.description') }}</p>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-3">
             <div class="rounded-lg border bg-card p-4">
-                <dt class="text-sm text-muted-foreground">Connection</dt>
+                <dt class="text-sm text-muted-foreground">{{ t('offline::offline.connection') }}</dt>
                 <dd class="mt-1 text-lg font-semibold" :class="store.state.isOnline ? 'text-green-600' : 'text-red-600'">
-                    {{ store.state.isOnline ? 'Online' : 'Offline' }}
+                    {{ store.state.isOnline ? t('offline::offline.online') : t('offline::offline.offline_state') }}
                 </dd>
             </div>
 
             <div class="rounded-lg border bg-card p-4">
-                <dt class="text-sm text-muted-foreground">Pending sync</dt>
-                <dd class="mt-1 text-lg font-semibold">{{ pendingSales.length }}</dd>
+                <dt class="text-sm text-muted-foreground">{{ t('offline::offline.pending_sync') }}</dt>
+                <dd class="mt-1 text-lg font-semibold tabular-nums">{{ pendingSales.length }}</dd>
             </div>
 
             <div class="rounded-lg border bg-card p-4">
-                <dt class="text-sm text-muted-foreground">Last sync</dt>
+                <dt class="text-sm text-muted-foreground">{{ t('offline::offline.last_sync') }}</dt>
                 <dd class="mt-1 text-lg font-semibold">
-                    {{ syncStatus.last_sync_at ? new Date(syncStatus.last_sync_at).toLocaleString() : 'Never' }}
+                    {{ syncStatus.last_sync_at ? new Date(syncStatus.last_sync_at).toLocaleString() : t('offline::offline.never') }}
                 </dd>
             </div>
         </div>
 
-        <div v-if="lastError" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+        <div v-if="lastError" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
             {{ lastError }}
         </div>
 
@@ -63,11 +66,11 @@ async function handleSync() {
             class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
             @click="handleSync"
         >
-            {{ syncing ? 'Syncing...' : `Sync ${pendingSales.length} pending sale(s)` }}
+            {{ syncing ? t('offline::offline.syncing') : t('offline::offline.sync_pending', { n: pendingSales.length }) }}
         </button>
 
-        <div v-if="pendingSales.length > 0" class="rounded-lg border bg-card">
-            <div class="border-b px-4 py-3 font-medium">Pending sales</div>
+        <div v-if="pendingSales.length > 0" class="overflow-hidden rounded-lg border bg-card">
+            <div class="border-b px-4 py-3 font-medium">{{ t('offline::offline.pending_sales') }}</div>
             <ul class="divide-y">
                 <li
                     v-for="sale in pendingSales"
@@ -75,7 +78,7 @@ async function handleSync() {
                     class="flex items-center justify-between px-4 py-3 text-sm"
                 >
                     <span>{{ sale.offline_local_id }}</span>
-                    <span>${{ sale.total.toFixed(2) }}</span>
+                    <span class="font-mono tabular-nums">${{ sale.total.toFixed(2) }}</span>
                 </li>
             </ul>
         </div>

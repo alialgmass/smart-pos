@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -9,6 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { store } from '@/routes/tenant/register';
+import { Form, Head } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineOptions({
     layout: {
@@ -19,7 +22,7 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Register Store" />
+    <Head :title="t('tenancy::register.page_title')" />
 
     <Form
         v-bind="store.form()"
@@ -29,7 +32,7 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="store_name">Store name</Label>
+                <Label for="store_name">{{ t('tenancy::register.store_name') }}</Label>
                 <Input
                     id="store_name"
                     type="text"
@@ -38,13 +41,13 @@ defineOptions({
                     :tabindex="1"
                     autocomplete="organization"
                     name="store_name"
-                    placeholder="Downtown Market"
+                    :placeholder="t('tenancy::register.store_name_placeholder')"
                 />
                 <InputError :message="errors.store_name" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="owner_name">Owner name</Label>
+                <Label for="owner_name">{{ t('tenancy::register.owner_name') }}</Label>
                 <Input
                     id="owner_name"
                     type="text"
@@ -52,13 +55,13 @@ defineOptions({
                     :tabindex="2"
                     autocomplete="name"
                     name="owner_name"
-                    placeholder="Full name"
+                    :placeholder="t('tenancy::register.owner_name_placeholder')"
                 />
                 <InputError :message="errors.owner_name" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">{{ t('tenancy::register.email_address') }}</Label>
                 <Input
                     id="email"
                     type="email"
@@ -72,27 +75,27 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Password</Label>
+                <Label for="password">{{ t('tenancy::register.password') }}</Label>
                 <PasswordInput
                     id="password"
                     required
                     :tabindex="4"
                     autocomplete="new-password"
                     name="password"
-                    placeholder="Password"
+                    :placeholder="t('tenancy::register.password_placeholder')"
                 />
                 <InputError :message="errors.password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
+                <Label for="password_confirmation">{{ t('tenancy::register.confirm_password') }}</Label>
                 <PasswordInput
                     id="password_confirmation"
                     required
                     :tabindex="5"
                     autocomplete="new-password"
                     name="password_confirmation"
-                    placeholder="Confirm password"
+                    :placeholder="t('tenancy::register.confirm_password_placeholder')"
                 />
                 <InputError :message="errors.password_confirmation" />
             </div>
@@ -105,14 +108,14 @@ defineOptions({
                 data-test="register-tenant-button"
             >
                 <Spinner v-if="processing" />
-                Create store
+                {{ t('tenancy::register.create_store') }}
             </Button>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">
-            Already registered?
+            {{ t('tenancy::register.already_registered') }}
             <TextLink :href="login()" class="underline underline-offset-4" :tabindex="7">
-                Log in
+                {{ t('tenancy::register.log_in') }}
             </TextLink>
         </div>
     </Form>

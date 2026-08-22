@@ -1,0 +1,51 @@
+{
+    "kitchen": {
+        "title": "Kitchen Display",
+        "pending_count": ":count pending",
+        "all_caught_up_title": "All caught up!",
+        "all_caught_up_description": "No pending orders in the kitchen.",
+        "table": "Table",
+        "mark_ready": "Mark Ready",
+        "print": "Print",
+        "status_sent": "Sent",
+        "status_ready": "Ready"
+    },
+    "tables": {
+        "title": "Restaurant Tables",
+        "add_table": "Add Table",
+        "create_table": "Create Table",
+        "create_table_description": "Add a new dining table to the floor plan.",
+        "table_name": "Table Name",
+        "capacity": "Capacity",
+        "capacity_label": "Capacity: :value",
+        "position_x": "Position X",
+        "position_y": "Position Y",
+        "save": "Save",
+        "status_available": "Available",
+        "status_occupied": "Occupied",
+        "status_reserved": "Reserved",
+        "active_order": "Active Order: :order",
+        "empty_title": "No tables yet",
+        "empty_description": "Create your first table to get started."
+    },
+    "orders": {
+        "title": "Order :number",
+        "open": "Open",
+        "sent": "Sent",
+        "ready": "Ready",
+        "paid": "Paid",
+        "cancelled": "Cancelled",
+        "send_to_kitchen": "Send to Kitchen",
+        "checkout": "Checkout",
+        "notes": "Notes:",
+        "item": "Item",
+        "qty": "Qty",
+        "price": "Price",
+        "kitchen": "Kitchen",
+        "kitchen_sent": "Sent",
+        "kitchen_pending": "Pending",
+        "no_items": "No items on this order.",
+        "server": "Server",
+        "not_available": "N/A"
+    }
+}

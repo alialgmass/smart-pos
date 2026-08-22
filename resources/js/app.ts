@@ -1,13 +1,22 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+import type { DefineComponent } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import { initializeDirection } from '@/composables/useDirection';
+import { createAppI18n } from '@/i18n';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
-import type { DefineComponent } from 'vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+// Eager glob must live in this entry file; nested files are not matched by rolldown...
+const moduleLangFiles = import.meta.glob(
+    '../../Modules/*/resources/js/lang/*.json',
+    { eager: true },
+) as Record<string, { default?: Record<string, unknown> }>;
+
+const { i18n } = createAppI18n(moduleLangFiles);
 
 createInertiaApp({
     resolve: async (name) => {
@@ -36,6 +45,7 @@ createInertiaApp({
             if (!modulePage) {
                 for (const [key, loader] of Object.entries(modulePages)) {
                     const pagePath = key.replace(/^.*\/pages\//, '').replace(/\.vue$/, '');
+
                     if (pagePath === name) {
                         modulePage = loader;
                         break;
@@ -71,6 +81,9 @@ createInertiaApp({
     },
     progress: {
         color: '#4B5563',
+    },
+    withApp: (app) => {
+        app.use(i18n);
     },
 });
 

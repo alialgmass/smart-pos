@@ -1,0 +1,19 @@
+{
+    "register": {
+        "layout_title": "أنشئ مساحة عمل متجرك",
+        "layout_description": "جهّز حساب المالك وابدأ تجربتك المجانية لمدة 14 يوماً",
+        "page_title": "تسجيل متجر",
+        "store_name": "اسم المتجر",
+        "store_name_placeholder": "سوق وسط المدينة",
+        "owner_name": "اسم المالك",
+        "owner_name_placeholder": "الاسم الكامل",
+        "email_address": "البريد الإلكتروني",
+        "password": "كلمة المرور",
+        "password_placeholder": "كلمة المرور",
+        "confirm_password": "تأكيد كلمة المرور",
+        "confirm_password_placeholder": "تأكيد كلمة المرور",
+        "create_store": "إنشاء المتجر",
+        "already_registered": "لديك حساب بالفعل؟",
+        "log_in": "تسجيل الدخول"
+    }
+}

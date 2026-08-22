@@ -1,0 +1,51 @@
+{
+    "kitchen": {
+        "title": "عرض المطبخ",
+        "pending_count": ":count قيد الانتظار",
+        "all_caught_up_title": "لا توجد طلبات!",
+        "all_caught_up_description": "لا توجد طلبات معلقة في المطبخ.",
+        "table": "الطاولة",
+        "mark_ready": "تم التجهيز",
+        "print": "طباعة",
+        "status_sent": "مُرسل",
+        "status_ready": "جاهز"
+    },
+    "tables": {
+        "title": "طاولات المطعم",
+        "add_table": "إضافة طاولة",
+        "create_table": "إنشاء طاولة",
+        "create_table_description": "أضف طاولة جديدة إلى مخطط الصالة.",
+        "table_name": "اسم الطاولة",
+        "capacity": "السعة",
+        "capacity_label": "السعة: :value",
+        "position_x": "الموضع س",
+        "position_y": "الموضع ص",
+        "save": "حفظ",
+        "status_available": "متاحة",
+        "status_occupied": "مشغولة",
+        "status_reserved": "محجوزة",
+        "active_order": "طلب نشط: :order",
+        "empty_title": "لا توجد طاولات بعد",
+        "empty_description": "أنشئ أول طاولة للبدء."
+    },
+    "orders": {
+        "title": "الطلب :number",
+        "open": "مفتوح",
+        "sent": "مُرسل",
+        "ready": "جاهز",
+        "paid": "مدفوع",
+        "cancelled": "ملغي",
+        "send_to_kitchen": "إرسال للمطبخ",
+        "checkout": "إتمام الدفع",
+        "notes": "الملاحظات:",
+        "item": "الصنف",
+        "qty": "الكمية",
+        "price": "السعر",
+        "kitchen": "المطبخ",
+        "kitchen_sent": "مُرسل",
+        "kitchen_pending": "قيد الانتظار",
+        "no_items": "لا توجد أصناف في هذا الطلب.",
+        "server": "الخادم",
+        "not_available": "غير متوفر"
+    }
+}

@@ -45,17 +45,23 @@ export function useCartStore() {
     has_variants?: boolean
     variant_id?: number | null
   }) {
-    if (product.stock_qty <= 0) return
+    if (product.stock_qty <= 0) {
+return
+}
 
     const existing = items.value.find(
       (i) => i.productId === product.id && i.variantId === (product.variant_id ?? null)
     )
 
     if (existing) {
-      if (existing.qty >= existing.maxQty) return
+      if (existing.qty >= existing.maxQty) {
+return
+}
+
       existing.qty = Math.min(existing.qty + 1, existing.maxQty)
       existing.total =
         existing.price * existing.qty - existing.discount + existing.taxAmount
+
       return
     }
 
@@ -80,10 +86,16 @@ export function useCartStore() {
   function updateQty(index: number, qty: number) {
     if (qty <= 0) {
       removeItem(index)
+
       return
     }
+
     const item = items.value[index]
-    if (!item) return
+
+    if (!item) {
+return
+}
+
     item.qty = Math.min(qty, item.maxQty)
     item.total = item.price * item.qty - item.discount + item.taxAmount
   }

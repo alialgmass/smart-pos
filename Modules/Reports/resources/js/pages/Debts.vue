@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import PageHeader from '@/components/shared/PageHeader.vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Table,
@@ -9,6 +9,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Head } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 interface OutstandingDebt {
     id: number;
@@ -20,7 +22,9 @@ interface OutstandingDebt {
     customer: { id: number; name: string } | null;
 }
 
-const props = defineProps<{
+const { t } = useI18n();
+
+defineProps<{
     report: {
         outstanding: OutstandingDebt[];
         aging: {
@@ -32,59 +36,62 @@ const props = defineProps<{
     };
 }>();
 
-const agingLabels: Record<string, string> = {
-    '1_7': '1-7 days',
-    '8_30': '8-30 days',
-    '31_90': '31-90 days',
-    '91_plus': '91+ days',
-};
+const agingKeys = ['1_7', '8_30', '31_90', '91_plus'] as const;
+
+const agingLabel = (key: string): string => t(`reports::debts_report.aging_${key}`);
 
 const agingVariant = (key: string): 'success' | 'warning' | 'destructive' => {
-    if (key === '1_7') return 'success';
-    if (key === '8_30' || key === '31_90') return 'warning';
+    if (key === '1_7') {
+return 'success';
+}
+
+    if (key === '8_30' || key === '31_90') {
+return 'warning';
+}
+
     return 'destructive';
 };
 </script>
 
 <template>
-    <Head title="Debt Report" />
+    <Head :title="t('reports::debts_report.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <h1 class="text-2xl font-bold">Debt Report</h1>
+        <PageHeader :title="t('reports::debts_report.title')" />
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div v-for="(count, key) in report.aging" :key="key" class="rounded-lg border p-4">
-                <p class="text-sm text-muted-foreground">{{ agingLabels[key] }}</p>
-                <p class="text-2xl font-bold">
-                    <Badge :variant="agingVariant(key)">{{ count }}</Badge>
+            <div v-for="key in agingKeys" :key="key" class="rounded-lg border p-4">
+                <p class="text-sm text-muted-foreground">{{ agingLabel(key) }}</p>
+                <p class="mt-2 text-2xl font-bold">
+                    <Badge :variant="agingVariant(key)">{{ report.aging[key] }}</Badge>
                 </p>
             </div>
         </div>
 
-        <div class="rounded-md border">
-            <div class="px-4 py-3 border-b">
-                <h2 class="font-semibold">Outstanding Debts</h2>
+        <div class="overflow-hidden rounded-lg border">
+            <div class="border-b px-4 py-3">
+                <h2 class="font-semibold">{{ t('reports::debts_report.outstanding_debts') }}</h2>
             </div>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Invoice</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Paid</TableHead>
-                        <TableHead>Outstanding</TableHead>
+                        <TableHead>{{ t('reports::debts_report.invoice') }}</TableHead>
+                        <TableHead>{{ t('reports::debts_report.customer') }}</TableHead>
+                        <TableHead>{{ t('reports::debts_report.total') }}</TableHead>
+                        <TableHead>{{ t('reports::debts_report.paid') }}</TableHead>
+                        <TableHead>{{ t('reports::debts_report.outstanding') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow v-for="debt in report.outstanding" :key="debt.id">
                         <TableCell class="font-medium">{{ debt.invoice_number }}</TableCell>
                         <TableCell>{{ debt.customer?.name ?? '-' }}</TableCell>
-                        <TableCell>${{ Number(debt.total).toFixed(2) }}</TableCell>
-                        <TableCell>${{ Number(debt.paid_amount).toFixed(2) }}</TableCell>
-                        <TableCell class="font-semibold text-destructive">${{ Number(debt.outstanding).toFixed(2) }}</TableCell>
+                        <TableCell class="font-mono tabular-nums">${{ Number(debt.total).toFixed(2) }}</TableCell>
+                        <TableCell class="font-mono tabular-nums">${{ Number(debt.paid_amount).toFixed(2) }}</TableCell>
+                        <TableCell class="font-mono font-semibold tabular-nums text-destructive">${{ Number(debt.outstanding).toFixed(2) }}</TableCell>
                     </TableRow>
                     <TableRow v-if="report.outstanding.length === 0">
-                        <TableCell colspan="5" class="text-center text-muted-foreground">No outstanding debts</TableCell>
+                        <TableCell colspan="5" class="text-center text-muted-foreground">{{ t('reports::debts_report.none') }}</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>

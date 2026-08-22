@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
+import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     Table,
     TableBody,
@@ -13,16 +14,21 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { ref, computed } from 'vue'
+import { PackageOpen } from 'lucide-vue-next'
+import { PageHeader, EmptyState, SearchFilterBar } from '@/components/shared'
 
 interface Product {
     id: number
     name: string
     barcode: string | null
+    price: string
 }
 
 const props = defineProps<{
     products: Product[]
 }>()
+
+const { t } = useI18n()
 
 const selectedProducts = ref<number[]>([])
 const quantity = ref(1)
@@ -38,6 +44,12 @@ const filteredProducts = computed(() => {
     )
 })
 
+const allSelected = computed(
+    () =>
+        filteredProducts.value.length > 0 &&
+        selectedProducts.value.length === filteredProducts.value.length,
+)
+
 const toggleProduct = (id: number) => {
     const idx = selectedProducts.value.indexOf(id)
     if (idx === -1) {
@@ -47,12 +59,8 @@ const toggleProduct = (id: number) => {
     }
 }
 
-const toggleAll = () => {
-    if (selectedProducts.value.length === filteredProducts.value.length) {
-        selectedProducts.value = []
-    } else {
-        selectedProducts.value = filteredProducts.value.map((p) => p.id)
-    }
+const toggleAll = (checked: boolean) => {
+    selectedProducts.value = checked ? filteredProducts.value.map((p) => p.id) : []
 }
 
 const printSelected = () => {
@@ -73,76 +81,72 @@ const printSelected = () => {
 </script>
 
 <template>
-    <Head title="Bulk Barcode Print" />
+    <Head :title="t('inventory.barcode.bulkTitle')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold">Bulk Barcode Print</h1>
-                <p class="text-sm text-muted-foreground">Generate barcode labels for multiple products at once.</p>
-            </div>
-            <Button @click="printSelected" :disabled="selectedProducts.length === 0">
-                Print {{ selectedProducts.length }} Barcodes
-            </Button>
-        </div>
+        <PageHeader :title="t('inventory.barcode.bulkTitle')" :description="t('inventory.barcode.bulkDescription')">
+            <template #actions>
+                <Button @click="printSelected" :disabled="selectedProducts.length === 0">
+                    {{ t('inventory.barcode.printCount', { count: selectedProducts.length }) }}
+                </Button>
+            </template>
+        </PageHeader>
 
-        <div class="rounded-md border p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-md border p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <div class="grid gap-2">
-                <Label>Label Quantity Per Product</Label>
-                <Input v-model.number="quantity" type="number" min="1" max="50" />
+                <Label for="quantity">{{ t('inventory.barcode.labelQuantity') }}</Label>
+                <Input id="quantity" v-model.number="quantity" type="number" min="1" max="50" />
             </div>
             <label class="flex items-center gap-2">
-                <input v-model="includePrice" type="checkbox" class="rounded border-input" />
-                <span class="text-sm">Include Price</span>
+                <Checkbox :checked="includePrice" @update:checked="includePrice = $event" />
+                <span class="text-sm">{{ t('inventory.barcode.includePrice') }}</span>
             </label>
             <label class="flex items-center gap-2">
-                <input v-model="includeName" type="checkbox" class="rounded border-input" />
-                <span class="text-sm">Include Name</span>
+                <Checkbox :checked="includeName" @update:checked="includeName = $event" />
+                <span class="text-sm">{{ t('inventory.barcode.includeName') }}</span>
             </label>
         </div>
 
-        <div class="rounded-md border">
-            <div class="px-4 py-3 border-b">
-                <Input
-                    v-model="searchQuery"
-                    placeholder="Search products..."
-                    class="max-w-sm"
-                />
-            </div>
+        <SearchFilterBar
+            :placeholder="t('inventory.barcode.searchProducts')"
+            @update:search="searchQuery = $event"
+            @reset="searchQuery = ''"
+        />
+
+        <EmptyState
+            v-if="filteredProducts.length === 0"
+            :icon="PackageOpen"
+            :title="t('inventory.barcode.noProducts')"
+        />
+
+        <div v-else class="rounded-md border">
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead class="w-12">
-                            <input
-                                type="checkbox"
-                                :checked="selectedProducts.length === filteredProducts.length && filteredProducts.length > 0"
-                                class="rounded border-input"
-                                @change="toggleAll"
-                            />
+                            <Checkbox :checked="allSelected" @update:checked="toggleAll" />
                         </TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Barcode</TableHead>
-                        <TableHead>Price</TableHead>
+                        <TableHead>{{ t('inventory.barcode.product') }}</TableHead>
+                        <TableHead>{{ t('inventory.products.barcode') }}</TableHead>
+                        <TableHead>{{ t('common.price') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="product in filteredProducts" :key="product.id">
-                        <TableCell>
-                            <input
-                                type="checkbox"
+                    <TableRow
+                        v-for="product in filteredProducts"
+                        :key="product.id"
+                        class="cursor-pointer"
+                        @click="toggleProduct(product.id)"
+                    >
+                        <TableCell @click.stop>
+                            <Checkbox
                                 :checked="selectedProducts.includes(product.id)"
-                                class="rounded border-input"
-                                @change="toggleProduct(product.id)"
+                                @update:checked="() => toggleProduct(product.id)"
                             />
                         </TableCell>
                         <TableCell class="font-medium">{{ product.name }}</TableCell>
                         <TableCell class="font-mono text-sm">{{ product.barcode ?? '-' }}</TableCell>
-                        <TableCell class="font-mono">{{ product.price }}</TableCell>
-                    </TableRow>
-                    <TableRow v-if="filteredProducts.length === 0">
-                        <TableCell colspan="4" class="text-center text-muted-foreground py-8">
-                            No products found
-                        </TableCell>
+                        <TableCell class="font-mono">{{ Number(product.price).toFixed(2) }} EGP</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>

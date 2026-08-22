@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import PageHeader from '@/components/shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { Head, useForm } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     settings: {
@@ -29,41 +34,48 @@ const save = () => {
 </script>
 
 <template>
-    <Head title="Tax Settings" />
+    <Head :title="t('settings::tax.title')" />
 
-    <div class="flex flex-col gap-6 p-6 max-w-2xl">
-        <h1 class="text-2xl font-bold">Tax Settings</h1>
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
+        <PageHeader
+            :title="t('settings::tax.title')"
+            :description="t('settings::tax.subtitle')"
+        />
 
-        <form @submit.prevent="save" class="grid gap-4">
+        <form @submit.prevent="save" class="grid gap-5 rounded-xl border bg-card p-6">
             <div class="grid gap-2">
-                <Label for="name">Tax Name</Label>
+                <Label for="name">{{ t('settings::tax.name') }}</Label>
                 <Input id="name" v-model="form.name" />
             </div>
             <div class="grid gap-2">
-                <Label for="rate">Tax Rate (%)</Label>
-                <Input id="rate" type="number" step="0.01" min="0" max="100" v-model="form.rate" />
+                <Label for="rate">{{ t('settings::tax.rate') }}</Label>
+                <Input id="rate" v-model="form.rate" type="number" step="0.01" min="0" max="100" />
             </div>
             <div class="grid gap-2">
-                <Label for="apply_to">Apply To</Label>
+                <Label for="apply_to">{{ t('settings::tax.apply_to') }}</Label>
                 <select
                     id="apply_to"
                     v-model="form.apply_to"
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    <option value="all">All Items</option>
-                    <option value="food">Food Only</option>
-                    <option value="beverage">Beverage Only</option>
-                    <option value="merchandise">Merchandise Only</option>
+                    <option value="all">{{ t('settings::tax.apply_all') }}</option>
+                    <option value="food">{{ t('settings::tax.apply_food') }}</option>
+                    <option value="beverage">{{ t('settings::tax.apply_beverage') }}</option>
+                    <option value="merchandise">{{ t('settings::tax.apply_merchandise') }}</option>
                 </select>
             </div>
-            <div class="flex items-center gap-2">
-                <input id="enabled" type="checkbox" v-model="form.enabled" class="rounded border-gray-300" />
-                <Label for="enabled">Enable tax</Label>
+            <div class="flex items-center gap-3">
+                <Checkbox
+                    id="enabled"
+                    :checked="form.enabled"
+                    @update:checked="(value: boolean) => (form.enabled = value)"
+                />
+                <Label for="enabled" class="font-normal">{{ t('settings::tax.enabled') }}</Label>
             </div>
             <div>
                 <Button type="submit" :disabled="form.processing">
-                    <Spinner v-if="form.processing" />
-                    Save
+                    <LoaderCircle v-if="form.processing" class="size-4 animate-spin" />
+                    {{ t('settings::tax.save') }}
                 </Button>
             </div>
         </form>

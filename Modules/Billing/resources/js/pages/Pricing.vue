@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     plans: Array<{
@@ -14,13 +17,13 @@ defineProps<{
 </script>
 
 <template>
-    <Head title="Pricing" />
+    <Head :title="t('billing::pricing.title')" />
 
     <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div class="text-center">
-            <h1 class="text-3xl font-bold tracking-tight">Pricing plans</h1>
+            <h1 class="text-3xl font-bold tracking-tight">{{ t('billing::pricing.title') }}</h1>
             <p class="mt-4 text-lg text-muted-foreground">
-                Choose the right plan for your business
+                {{ t('billing::pricing.subtitle') }}
             </p>
         </div>
 
@@ -33,17 +36,17 @@ defineProps<{
                 <h2 class="text-xl font-semibold">{{ plan.name }}</h2>
                 <p class="mt-4">
                     <span class="text-4xl font-bold">${{ plan.price_monthly }}</span>
-                    <span class="text-muted-foreground">/month</span>
+                    <span class="text-muted-foreground">{{ t('billing::pricing.month') }}</span>
                 </p>
 
                 <ul class="mt-8 flex-1 space-y-3">
                     <li class="flex items-center gap-2">
                         <span class="text-green-500">&#10003;</span>
-                        {{ plan.max_users }} staff accounts
+                        {{ t('billing::pricing.staff_accounts', { n: plan.max_users }) }}
                     </li>
                     <li class="flex items-center gap-2">
                         <span class="text-green-500">&#10003;</span>
-                        Up to {{ plan.max_products }} products
+                        {{ t('billing::pricing.up_to_products', { n: plan.max_products }) }}
                     </li>
                     <li
                         v-for="feature in (plan.features ?? [])"

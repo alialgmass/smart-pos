@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { Badge } from '@/components/ui/badge';
+import PageHeader from '@/components/shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -10,6 +9,17 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Head } from '@inertiajs/vue3';
+import {
+    Banknote,
+    Download,
+    Gauge,
+    ReceiptText,
+    TrendingDown,
+    TrendingUp,
+    Zap,
+} from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 interface TopProduct {
     product_id: number | null;
@@ -39,6 +49,8 @@ interface PaymentBreakdown {
     percentage: number;
 }
 
+const { t, te } = useI18n();
+
 const props = defineProps<{
     metrics: {
         today_sales: number;
@@ -56,8 +68,12 @@ const props = defineProps<{
 }>();
 
 const trend = (current: number, previous: number) => {
-    if (previous === 0) return { value: '—', up: true };
+    if (previous === 0) {
+return { value: '—', up: true };
+}
+
     const pct = ((current - previous) / previous) * 100;
+
     return {
         value: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`,
         up: pct >= 0,
@@ -71,6 +87,7 @@ const paymentColors = ['bg-primary', 'bg-secondary', 'bg-amber-600', 'bg-blue-50
 
 const donutSegments = () => {
     let offset = 0;
+
     return props.metrics.payment_breakdown.map((pm) => {
         const dashLength = (pm.percentage / 100) * circumference;
         const seg = {
@@ -79,89 +96,100 @@ const donutSegments = () => {
             offset: -offset,
         };
         offset += dashLength;
+
         return seg;
     });
 };
 
-const paymentLabels: Record<string, string> = {
-    cash: 'Cash',
-    card: 'Card',
-    mixed: 'Mixed',
-    deferred: 'Deferred',
+const methodKeys: Record<string, string> = {
+    cash: 'payment_cash',
+    card: 'payment_card',
+    mixed: 'payment_mixed',
+    deferred: 'payment_deferred',
+};
+
+const paymentLabel = (method: string): string => {
+    const key = `reports::dashboard.${methodKeys[method]}`;
+
+    return te(key) ? t(key) : method;
 };
 
 const priorityLevel = (stock: number, min: number) => {
     const ratio = stock / min;
-    if (ratio <= 0.3) return { label: 'Critical', class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
-    return { label: 'Warning', class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' };
+
+    if (ratio <= 0.3) {
+return { label: t('reports::dashboard.critical'), class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+}
+
+    return { label: t('reports::dashboard.warning'), class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' };
 };
 </script>
 
 <template>
-    <Head title="Reports Dashboard" />
+    <Head :title="t('reports::dashboard.title')" />
 
-    <div class="flex flex-col gap-6 p-6 max-w-[1600px] mx-auto">
-        <h1 class="text-2xl font-bold">Dashboard</h1>
+    <div class="mx-auto flex max-w-[1600px] flex-col gap-6 p-6">
+        <PageHeader :title="t('reports::dashboard.heading')" />
 
         <!-- KPI Cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="relative rounded-xl border bg-card p-5 flex flex-col justify-between h-32 overflow-hidden group">
-                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[80px]">payments</span>
+        <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="group relative flex h-32 flex-col justify-between overflow-hidden rounded-xl border bg-card p-5">
+                <div class="absolute -bottom-4 -end-4 opacity-10 transition-transform group-hover:scale-110">
+                    <Banknote class="size-20" />
                 </div>
                 <div>
-                    <p class="text-sm text-muted-foreground">Total Sales Today</p>
-                    <p class="text-3xl font-bold text-primary mt-1">${{ Number(metrics.today_sales).toFixed(2) }}</p>
+                    <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.total_sales_today') }}</p>
+                    <p class="mt-1 font-mono text-3xl font-bold text-primary tabular-nums">${{ Number(metrics.today_sales).toFixed(2) }}</p>
                 </div>
-                <div class="flex items-center gap-1 text-xs font-bold" :class="trend(metrics.today_sales, metrics.yesterday_sales).up ? 'text-secondary' : 'text-destructive'">
-                    <span class="material-symbols-outlined text-sm">{{ trend(metrics.today_sales, metrics.yesterday_sales).up ? 'trending_up' : 'trending_down' }}</span>
-                    {{ trend(metrics.today_sales, metrics.yesterday_sales).value }} vs yesterday
+                <div class="flex items-center gap-1 text-xs font-bold" :class="trend(metrics.today_sales, metrics.yesterday_sales).up ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'">
+                    <component :is="trend(metrics.today_sales, metrics.yesterday_sales).up ? TrendingUp : TrendingDown" class="size-3.5" />
+                    {{ trend(metrics.today_sales, metrics.yesterday_sales).value }} {{ t('reports::dashboard.vs_yesterday') }}
                 </div>
             </div>
-            <div class="relative rounded-xl border bg-card p-5 flex flex-col justify-between h-32 overflow-hidden group">
-                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[80px]">receipt_long</span>
+            <div class="group relative flex h-32 flex-col justify-between overflow-hidden rounded-xl border bg-card p-5">
+                <div class="absolute -bottom-4 -end-4 opacity-10 transition-transform group-hover:scale-110">
+                    <ReceiptText class="size-20" />
                 </div>
                 <div>
-                    <p class="text-sm text-muted-foreground">Transactions</p>
-                    <p class="text-3xl font-bold text-primary mt-1">{{ metrics.transaction_count }}</p>
+                    <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.transactions') }}</p>
+                    <p class="mt-1 text-3xl font-bold text-primary tabular-nums">{{ metrics.transaction_count }}</p>
                 </div>
-                <div class="flex items-center gap-1 text-xs font-bold" :class="trend(metrics.transaction_count, metrics.yesterday_transactions).up ? 'text-secondary' : 'text-destructive'">
-                    <span class="material-symbols-outlined text-sm">{{ trend(metrics.transaction_count, metrics.yesterday_transactions).up ? 'trending_up' : 'trending_down' }}</span>
-                    {{ trend(metrics.transaction_count, metrics.yesterday_transactions).value }} vs yesterday
+                <div class="flex items-center gap-1 text-xs font-bold" :class="trend(metrics.transaction_count, metrics.yesterday_transactions).up ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'">
+                    <component :is="trend(metrics.transaction_count, metrics.yesterday_transactions).up ? TrendingUp : TrendingDown" class="size-3.5" />
+                    {{ trend(metrics.transaction_count, metrics.yesterday_transactions).value }} {{ t('reports::dashboard.vs_yesterday') }}
                 </div>
             </div>
-            <div class="relative rounded-xl border bg-card p-5 flex flex-col justify-between h-32 overflow-hidden group">
-                <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-[80px]">average_pace</span>
+            <div class="group relative flex h-32 flex-col justify-between overflow-hidden rounded-xl border bg-card p-5">
+                <div class="absolute -bottom-4 -end-4 opacity-10 transition-transform group-hover:scale-110">
+                    <Gauge class="size-20" />
                 </div>
                 <div>
-                    <p class="text-sm text-muted-foreground">Average Sale</p>
-                    <p class="text-3xl font-bold text-primary mt-1">${{ Number(metrics.avg_sale).toFixed(2) }}</p>
+                    <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.average_sale') }}</p>
+                    <p class="mt-1 font-mono text-3xl font-bold text-primary tabular-nums">${{ Number(metrics.avg_sale).toFixed(2) }}</p>
                 </div>
-                <div class="flex items-center gap-1 text-xs font-bold" :class="trend(metrics.avg_sale, metrics.yesterday_avg_sale).up ? 'text-secondary' : 'text-destructive'">
-                    <span class="material-symbols-outlined text-sm">{{ trend(metrics.avg_sale, metrics.yesterday_avg_sale).up ? 'trending_up' : 'trending_down' }}</span>
-                    {{ trend(metrics.avg_sale, metrics.yesterday_avg_sale).value }} vs yesterday
+                <div class="flex items-center gap-1 text-xs font-bold" :class="trend(metrics.avg_sale, metrics.yesterday_avg_sale).up ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'">
+                    <component :is="trend(metrics.avg_sale, metrics.yesterday_avg_sale).up ? TrendingUp : TrendingDown" class="size-3.5" />
+                    {{ trend(metrics.avg_sale, metrics.yesterday_avg_sale).value }} {{ t('reports::dashboard.vs_yesterday') }}
                 </div>
             </div>
-            <div class="rounded-xl bg-primary text-primary-foreground p-5 flex flex-col justify-center items-center text-center">
-                <span class="material-symbols-outlined text-secondary text-3xl mb-1">bolt</span>
-                <p class="font-bold text-xs uppercase tracking-widest opacity-80">Quick Action</p>
-                <p class="text-base mt-2">Run EOD Report</p>
+            <div class="flex flex-col items-center justify-center rounded-xl bg-primary p-5 text-center text-primary-foreground">
+                <Zap class="mb-1 size-7 text-amber-400" />
+                <p class="text-xs font-bold uppercase tracking-widest opacity-80">{{ t('reports::dashboard.quick_action') }}</p>
+                <p class="mt-2 text-base font-semibold">{{ t('reports::dashboard.run_eod') }}</p>
             </div>
         </section>
 
         <!-- Charts Row -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <!-- 30-Day Sales Trend -->
-            <div class="lg:col-span-2 rounded-xl border bg-card p-5">
-                <div class="flex justify-between items-start mb-4">
+            <div class="rounded-xl border bg-card p-5 lg:col-span-2">
+                <div class="mb-4 flex items-start justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold">Sales Performance</h3>
-                        <p class="text-sm text-muted-foreground">Revenue trend over the last 30 days</p>
+                        <h3 class="text-lg font-semibold">{{ t('reports::dashboard.sales_performance') }}</h3>
+                        <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.revenue_trend') }}</p>
                     </div>
                 </div>
-                <div class="h-56 w-full flex items-end gap-1 px-2">
+                <div class="flex h-56 w-full items-end gap-1 px-2">
                     <div
                         v-for="(point, idx) in metrics.sales_trend"
                         :key="point.date"
@@ -171,7 +199,7 @@ const priorityLevel = (stock: number, min: number) => {
                         :title="`${point.date}: $${Number(point.total).toFixed(2)}`"
                     />
                 </div>
-                <div class="flex justify-between mt-2 px-2 text-xs text-muted-foreground">
+                <div class="mt-2 flex justify-between px-2 text-xs text-muted-foreground">
                     <span>{{ metrics.sales_trend[0]?.date }}</span>
                     <span>{{ metrics.sales_trend[Math.floor(metrics.sales_trend.length / 2)]?.date }}</span>
                     <span>{{ metrics.sales_trend[metrics.sales_trend.length - 1]?.date }}</span>
@@ -179,10 +207,10 @@ const priorityLevel = (stock: number, min: number) => {
             </div>
 
             <!-- Payment Breakdown Donut -->
-            <div class="rounded-xl border bg-card p-5 flex flex-col">
-                <h3 class="text-lg font-semibold mb-4">Payment Methods</h3>
-                <div class="flex-1 flex flex-col items-center justify-center relative">
-                    <svg class="w-48 h-48 transform -rotate-90" viewBox="0 0 192 192">
+            <div class="flex flex-col rounded-xl border bg-card p-5">
+                <h3 class="mb-4 text-lg font-semibold">{{ t('reports::dashboard.payment_methods') }}</h3>
+                <div class="relative flex flex-1 flex-col items-center justify-center">
+                    <svg class="h-48 w-48 -rotate-90" viewBox="0 0 192 192">
                         <circle cx="96" cy="96" fill="transparent" r="80" stroke="#f1f5f9" stroke-width="20" />
                         <circle
                             v-for="seg in donutSegments()"
@@ -198,69 +226,72 @@ const priorityLevel = (stock: number, min: number) => {
                         />
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="text-2xl font-bold">{{ metrics.payment_breakdown.length }}</span>
-                        <span class="text-[10px] uppercase font-bold text-muted-foreground">Methods</span>
+                        <span class="text-2xl font-bold tabular-nums">{{ metrics.payment_breakdown.length }}</span>
+                        <span class="text-[10px] font-bold uppercase text-muted-foreground">{{ t('reports::dashboard.methods') }}</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 mt-4">
+                <div class="mt-4 grid grid-cols-2 gap-2">
                     <div
                         v-for="(pm, idx) in metrics.payment_breakdown"
                         :key="pm.payment_method"
                         class="flex items-center gap-2"
                     >
                         <div
-                            class="w-3 h-3 rounded-full shrink-0"
+                            class="size-3 shrink-0 rounded-full"
                             :class="paymentColors[idx]"
                         />
-                        <span class="text-sm">{{ paymentLabels[pm.payment_method] ?? pm.payment_method }} ({{ pm.percentage }}%)</span>
+                        <span class="text-sm tabular-nums">{{ paymentLabel(pm.payment_method) }} ({{ pm.percentage }}%)</span>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Low Stock Table -->
-        <section class="rounded-xl border bg-card overflow-hidden">
-            <div class="px-5 py-3 border-b flex justify-between items-center">
+        <section class="overflow-hidden rounded-xl border bg-card">
+            <div class="flex items-center justify-between border-b px-5 py-3">
                 <div>
-                    <h3 class="text-lg font-semibold">Low Stock Alerts</h3>
-                    <p class="text-sm text-muted-foreground">Items requiring immediate reorder</p>
+                    <h3 class="text-lg font-semibold">{{ t('reports::dashboard.low_stock_alerts') }}</h3>
+                    <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.items_requiring_reorder') }}</p>
                 </div>
-                <Button variant="outline" size="sm">Export List</Button>
+                <Button variant="outline" size="sm">
+                    <Download class="size-3.5" />
+                    {{ t('reports::dashboard.export_list') }}
+                </Button>
             </div>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Product Name</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead class="text-right">Current Stock</TableHead>
-                        <TableHead class="text-right">Min. Stock</TableHead>
-                        <TableHead class="text-center">Priority</TableHead>
-                        <TableHead class="text-right">Action</TableHead>
+                        <TableHead>{{ t('reports::dashboard.product_name') }}</TableHead>
+                        <TableHead>{{ t('reports::dashboard.category') }}</TableHead>
+                        <TableHead class="text-end">{{ t('reports::dashboard.current_stock') }}</TableHead>
+                        <TableHead class="text-end">{{ t('reports::dashboard.min_stock') }}</TableHead>
+                        <TableHead class="text-center">{{ t('reports::dashboard.priority') }}</TableHead>
+                        <TableHead class="text-end">{{ t('reports::dashboard.action') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow v-if="metrics.low_stock_products.length === 0">
-                        <TableCell colspan="6" class="text-center text-muted-foreground py-8">
-                            No low stock items
+                        <TableCell colspan="6" class="py-8 text-center text-muted-foreground">
+                            {{ t('reports::dashboard.no_low_stock') }}
                         </TableCell>
                     </TableRow>
                     <TableRow v-for="product in metrics.low_stock_products" :key="product.id">
                         <TableCell class="font-medium">{{ product.name }}</TableCell>
                         <TableCell class="text-sm text-muted-foreground">{{ product.category?.name ?? '—' }}</TableCell>
-                        <TableCell class="text-right font-mono text-sm" :class="{ 'text-destructive': Number(product.stock_qty) <= Number(product.min_stock) * 0.3 }">
-                            {{ Number(product.stock_qty).toFixed(0) }} units
+                        <TableCell class="font-mono text-sm tabular-nums" :class="{ 'text-destructive': Number(product.stock_qty) <= Number(product.min_stock) * 0.3 }">
+                            {{ t('reports::dashboard.units', { n: Number(product.stock_qty).toFixed(0) }) }}
                         </TableCell>
-                        <TableCell class="text-right font-mono text-sm">{{ Number(product.min_stock).toFixed(0) }} units</TableCell>
+                        <TableCell class="text-end font-mono text-sm tabular-nums">{{ t('reports::dashboard.units', { n: Number(product.min_stock).toFixed(0) }) }}</TableCell>
                         <TableCell class="text-center">
                             <span
-                                class="px-2 py-0.5 rounded-full text-[11px] font-bold uppercase"
+                                class="rounded-full px-2 py-0.5 text-[11px] font-bold uppercase"
                                 :class="priorityLevel(Number(product.stock_qty), Number(product.min_stock)).class"
                             >
                                 {{ priorityLevel(Number(product.stock_qty), Number(product.min_stock)).label }}
                             </span>
                         </TableCell>
-                        <TableCell class="text-right">
-                            <Button variant="link" size="sm">Reorder</Button>
+                        <TableCell class="text-end">
+                            <Button variant="link" size="sm">{{ t('reports::dashboard.reorder') }}</Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>
@@ -269,19 +300,19 @@ const priorityLevel = (stock: number, min: number) => {
 
         <!-- Top Product Card -->
         <section v-if="metrics.top_product" class="rounded-xl border bg-card p-5">
-            <h3 class="text-lg font-semibold mb-3">Top Product</h3>
+            <h3 class="mb-3 text-lg font-semibold">{{ t('reports::dashboard.top_product') }}</h3>
             <div class="grid grid-cols-3 gap-4">
                 <div>
-                    <p class="text-sm text-muted-foreground">Name</p>
+                    <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.name') }}</p>
                     <p class="font-medium">{{ metrics.top_product.name }}</p>
                 </div>
                 <div>
-                    <p class="text-sm text-muted-foreground">Qty Sold</p>
-                    <p class="font-medium">{{ Number(metrics.top_product.total_qty).toFixed(0) }}</p>
+                    <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.qty_sold') }}</p>
+                    <p class="font-medium tabular-nums">{{ t('reports::dashboard.units', { n: Number(metrics.top_product.total_qty).toFixed(0) }) }}</p>
                 </div>
                 <div>
-                    <p class="text-sm text-muted-foreground">Revenue</p>
-                    <p class="font-medium">${{ Number(metrics.top_product.total_revenue).toFixed(2) }}</p>
+                    <p class="text-sm text-muted-foreground">{{ t('reports::dashboard.revenue') }}</p>
+                    <p class="font-mono font-medium tabular-nums">${{ Number(metrics.top_product.total_revenue).toFixed(2) }}</p>
                 </div>
             </div>
         </section>

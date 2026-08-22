@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import {
     Dialog,
     DialogContent,
@@ -21,6 +21,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import PageHeader from '@/components/shared/PageHeader.vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import PaginationLinks from '@/components/shared/PaginationLinks.vue';
+import { UserPlus, Users, ReceiptText } from 'lucide-vue-next';
 import { index as indexRoute, store, show, debts } from '@/routes/customers';
 
 interface Customer {
@@ -31,12 +35,15 @@ interface Customer {
     loyalty_points: number;
 }
 
+const { t } = useI18n();
+
 const props = defineProps<{
     customers: {
         data: Customer[];
         current_page: number;
         last_page: number;
-        total: number;
+        total?: number;
+        per_page?: number;
     };
 }>();
 
@@ -56,43 +63,51 @@ const createCustomer = () => {
 </script>
 
 <template>
-    <Head title="Customers" />
+    <Head :title="t('customers::customers.title')" />
 
     <div class="flex flex-col gap-6 p-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold">Customers</h1>
+        <div class="flex items-center justify-between gap-4">
+            <PageHeader
+                :title="t('customers::customers.title')"
+                :description="t('customers::customers.subtitle')"
+            />
 
             <div class="flex items-center gap-3">
                 <Link :href="debts.url()">
-                    <Button variant="outline">Manage Debts</Button>
+                    <Button variant="outline">
+                        <ReceiptText class="size-4" />
+                        {{ t('customers::customers.manage_debts') }}
+                    </Button>
                 </Link>
 
                 <Dialog>
                     <DialogTrigger as-child>
-                        <Button>Add Customer</Button>
+                        <Button>
+                            <UserPlus class="size-4" />
+                            {{ t('customers::customers.add_customer') }}
+                        </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Create Customer</DialogTitle>
+                            <DialogTitle>{{ t('customers::customers.create_customer') }}</DialogTitle>
                             <DialogDescription>
-                                Add a new customer to your directory.
+                                {{ t('customers::customers.create_description') }}
                             </DialogDescription>
                         </DialogHeader>
 
                         <form @submit.prevent="createCustomer" class="grid gap-4">
                             <div class="grid gap-2">
-                                <Label for="name">Name</Label>
+                                <Label for="name">{{ t('customers::customers.name') }}</Label>
                                 <Input id="name" v-model="form.name" required />
                             </div>
                             <div class="grid gap-2">
-                                <Label for="phone">Phone</Label>
-                                <Input id="phone" v-model="form.phone" required />
+                                <Label for="phone">{{ t('customers::customers.phone') }}</Label>
+                                <Input id="phone" v-model="form.phone" type="tel" dir="ltr" required />
                             </div>
 
                             <DialogFooter>
                                 <Button type="submit" :disabled="form.processing">
-                                    <Spinner v-if="form.processing" />
-                                    Save
+                                    {{ t('customers::customers.save') }}
                                 </Button>
                             </DialogFooter>
                         </form>
@@ -101,43 +116,48 @@ const createCustomer = () => {
             </div>
         </div>
 
-        <div class="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Debt Balance</TableHead>
-                        <TableHead>Loyalty Points</TableHead>
-                        <TableHead class="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow v-for="customer in customers.data" :key="customer.id">
-                        <TableCell class="font-medium">{{ customer.name }}</TableCell>
-                        <TableCell>{{ customer.phone }}</TableCell>
-                        <TableCell>${{ customer.debt_balance }}</TableCell>
-                        <TableCell>{{ customer.loyalty_points }}</TableCell>
-                        <TableCell class="text-right">
-                            <Link :href="show.url({ customer: customer.id })">
-                                <Button variant="outline" size="sm">View</Button>
-                            </Link>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-        </div>
+        <EmptyState
+            v-if="props.customers.data.length === 0"
+            :icon="Users"
+            :title="t('customers::customers.title')"
+        />
 
-        <div v-if="customers.last_page > 1" class="flex justify-center gap-2">
-            <Link
-                v-for="page in customers.last_page"
-                :key="page"
-                :href="indexRoute.url({ query: { page } })"
-                class="rounded-md px-3 py-1 text-sm"
-                :class="page === customers.current_page ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
-            >
-                {{ page }}
-            </Link>
-        </div>
+        <template v-else>
+            <div class="rounded-lg border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>{{ t('customers::customers.column_name') }}</TableHead>
+                            <TableHead>{{ t('customers::customers.column_phone') }}</TableHead>
+                            <TableHead>{{ t('customers::customers.column_debt_balance') }}</TableHead>
+                            <TableHead>{{ t('customers::customers.column_loyalty_points') }}</TableHead>
+                            <TableHead class="text-end">{{ t('customers::customers.column_actions') }}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="customer in props.customers.data" :key="customer.id">
+                            <TableCell class="font-medium">{{ customer.name }}</TableCell>
+                            <TableCell dir="ltr" class="text-start tabular-nums">{{ customer.phone }}</TableCell>
+                            <TableCell class="font-mono tabular-nums">${{ Number(customer.debt_balance).toFixed(2) }}</TableCell>
+                            <TableCell class="tabular-nums">{{ customer.loyalty_points }}</TableCell>
+                            <TableCell class="text-end">
+                                <Link :href="show.url({ customer: customer.id })">
+                                    <Button variant="outline" size="sm">{{ t('customers::customers.view') }}</Button>
+                                </Link>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+
+            <PaginationLinks
+                v-if="props.customers.last_page > 1"
+                :current-page="props.customers.current_page"
+                :last-page="props.customers.last_page"
+                :total="props.customers.total"
+                :per-page="props.customers.per_page"
+                :href-for="(page: number) => indexRoute.url({ query: { page } })"
+            />
+        </template>
     </div>
 </template>
