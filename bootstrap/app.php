@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
             SetCurrentTenant::class,
         ]);
+
+        $middleware->api(append: [
+            SetCurrentTenant::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
