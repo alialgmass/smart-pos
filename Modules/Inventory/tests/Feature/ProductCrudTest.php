@@ -59,6 +59,40 @@ class ProductCrudTest extends TestCase
         $this->assertSame(49.99, (float) $product->fresh()->price);
     }
 
+    public function test_admin_can_view_edit_page(): void
+    {
+        $tenant = Tenant::factory()->create();
+        app(TenantPermissionSeeder::class)->seedForTenant($tenant);
+
+        $admin = User::factory()->create(['tenant_id' => $tenant->id]);
+        $admin->assignRole('Admin');
+
+        $product = Product::factory()->create(['tenant_id' => $tenant->id]);
+
+        $response = $this->actingAs($admin)->get(route('inventory.products.edit', $product));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Inventory/Products/Edit')
+            ->where('product.id', $product->id)
+        );
+    }
+
+    public function test_edit_rejects_product_from_other_tenant(): void
+    {
+        $tenant = Tenant::factory()->create();
+        app(TenantPermissionSeeder::class)->seedForTenant($tenant);
+
+        $admin = User::factory()->create(['tenant_id' => $tenant->id]);
+        $admin->assignRole('Admin');
+
+        $otherProduct = Product::factory()->create(['tenant_id' => Tenant::factory()->create()->id]);
+
+        $this->actingAs($admin)
+            ->get(route('inventory.products.edit', $otherProduct))
+            ->assertNotFound();
+    }
+
     public function test_admin_can_delete_product(): void
     {
         $tenant = Tenant::factory()->create();

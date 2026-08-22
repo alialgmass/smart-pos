@@ -45,6 +45,20 @@ class ProductController extends Controller
         return redirect()->route('inventory.products.index')->with('status', __('Product created.'));
     }
 
+    public function edit(Product $product): Response
+    {
+        $product->load('category:id,name');
+
+        return Inertia::render('Inventory/Products/Edit', [
+            'product' => $product,
+            'categories' => Category::query()
+                ->withoutGlobalScope('tenant')
+                ->where('tenant_id', auth()->user()->tenant_id)
+                ->orderBy('sort_order')
+                ->get(['id', 'name']),
+        ]);
+    }
+
     public function update(ProductRequest $request, Product $product, UpdateProductAction $action): RedirectResponse
     {
         $action->execute($product, $request->validated());

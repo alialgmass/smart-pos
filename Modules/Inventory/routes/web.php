@@ -11,7 +11,7 @@ Route::middleware(['auth', 'verified'])
     ->prefix('inventory')
     ->name('inventory.')
     ->group(function (): void {
-        Route::resource('products', ProductController::class);
+        Route::resource('products', ProductController::class)->except(['create', 'show']);
         Route::resource('categories', CategoryController::class)->except('show');
         Route::post('categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
         Route::post('products/import/preview', [ProductImportController::class, 'preview'])->name('products.import.preview');
