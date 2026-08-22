@@ -17,10 +17,33 @@ createInertiaApp({
         );
 
         const appPage = appPages[`./pages/${name}.vue`];
-        const [moduleName, ...modulePageParts] = name.split('/');
-        const modulePage = modulePages[
-            `../../Modules/${moduleName}/resources/js/pages/${modulePageParts.join('/')}.vue`
-        ];
+
+        let modulePage;
+
+        if (name.includes('::')) {
+            const [moduleNs, pagePath] = name.split('::');
+            const moduleName = moduleNs.charAt(0).toUpperCase() + moduleNs.slice(1);
+            modulePage = modulePages[
+                `../../Modules/${moduleName}/resources/js/pages/${pagePath}.vue`
+            ];
+        } else {
+            const [firstSegment, ...rest] = name.split('/');
+
+            modulePage = modulePages[
+                `../../Modules/${firstSegment}/resources/js/pages/${rest.join('/')}.vue`
+            ];
+
+            if (!modulePage) {
+                for (const [key, loader] of Object.entries(modulePages)) {
+                    const pagePath = key.replace(/^.*\/pages\//, '').replace(/\.vue$/, '');
+                    if (pagePath === name) {
+                        modulePage = loader;
+                        break;
+                    }
+                }
+            }
+        }
+
         const page = appPage ?? modulePage;
 
         if (!page) {

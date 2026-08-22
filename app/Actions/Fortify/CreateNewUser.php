@@ -29,7 +29,7 @@ class CreateNewUser implements CreatesNewUsers
 
         // Default 'store_name' if missing
         if (! isset($input['store_name']) && isset($input['owner_name'])) {
-            $input['store_name'] = $input['owner_name'] . "'s Store";
+            $input['store_name'] = $input['owner_name']."'s Store";
         }
 
         Validator::make($input, [

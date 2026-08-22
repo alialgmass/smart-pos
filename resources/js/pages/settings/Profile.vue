@@ -93,16 +93,18 @@ const user = computed(() => page.props.auth.user);
 
                 <div
                     v-if="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
+                    class="mt-2 flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-400"
                 >
+                    <span class="material-symbols-outlined text-base">check_circle</span>
                     A new verification link has been sent to your email address.
                 </div>
             </div>
 
             <div class="flex items-center gap-4">
-                <Button :disabled="processing" data-test="update-profile-button"
-                    >Save</Button
-                >
+                <Button :disabled="processing" data-test="update-profile-button">
+                    <span class="material-symbols-outlined text-sm mr-1">save</span>
+                    Save
+                </Button>
             </div>
         </Form>
     </div>

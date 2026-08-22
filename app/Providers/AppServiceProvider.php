@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\Policies\SalePolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Modules\Sales\Models\Sale;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->loadModuleMigrations();
+
+        Gate::policy(Sale::class, SalePolicy::class);
     }
 
     /**

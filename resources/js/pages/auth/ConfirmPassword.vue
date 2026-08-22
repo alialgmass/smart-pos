@@ -45,7 +45,8 @@ defineOptions({
                     :disabled="processing"
                     data-test="confirm-password-button"
                 >
-                    <Spinner v-if="processing" />
+                    <Spinner v-if="processing" class="mr-2" />
+                    <span class="material-symbols-outlined text-sm mr-1">verified_user</span>
                     Confirm password
                 </Button>
             </div>

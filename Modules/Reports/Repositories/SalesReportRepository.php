@@ -2,16 +2,19 @@
 
 namespace Modules\Reports\Repositories;
 
+use Carbon\CarbonInterface;
 use Modules\Sales\Models\Sale;
 
 class SalesReportRepository
 {
-    public function todaySales(int $tenantId): array
+    public function todaySales(int $tenantId, ?CarbonInterface $date = null): array
     {
+        $date ??= today();
+
         return Sale::query()
             ->withoutGlobalScope('tenant')
             ->where('tenant_id', $tenantId)
-            ->whereDate('created_at', today())
+            ->whereDate('created_at', $date)
             ->selectRaw('COALESCE(SUM(total), 0) as total_sales')
             ->selectRaw('COUNT(*) as transaction_count')
             ->selectRaw('COALESCE(AVG(total), 0) as average_sale')

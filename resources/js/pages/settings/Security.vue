@@ -110,6 +110,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                     :disabled="processing"
                     data-test="update-password-button"
                 >
+                    <span class="material-symbols-outlined text-sm mr-1">lock_reset</span>
                     Save password
                 </Button>
             </div>

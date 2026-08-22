@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
-import { dashboard, login, register } from '@/routes'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
+import { dashboard, login, register as registerRoute } from '@/routes'
 
 withDefaults(
     defineProps<{
         canRegister: boolean
     }>(),
-    {
-        canRegister: true,
-    },
+    { canRegister: true },
 )
 
 const page = usePage()
@@ -18,56 +19,60 @@ const dir = computed(() => (page.props.locale === 'ar' ? 'rtl' : 'ltr'))
 
 const features = [
     {
-        title: 'Fast & Efficient POS',
-        description: 'Process transactions in seconds with an optimized interface designed for speed.',
-        icon: '⚡',
+        title: 'Fully Bilingual Interface',
+        description: 'Seamlessly switch between Arabic and English. Optimized for local RTL requirements and Egyptian tax regulations.',
+        icon: 'language',
+        span: 'lg:col-span-2',
+        class: 'bg-white border',
     },
     {
-        title: 'Inventory Management',
-        description: 'Track stock levels, manage variants, and get low-stock alerts in real time.',
-        icon: '📦',
+        title: 'High-Speed Offline Mode',
+        description: 'Continue sales even when the internet goes down. Auto-syncs once back online.',
+        icon: 'bolt',
+        class: 'bg-primary text-white',
     },
     {
-        title: 'Customer Management',
-        description: 'Build customer profiles, track purchase history, and manage loyalty points.',
-        icon: '👥',
+        title: 'E-Invoicing Ready',
+        description: 'Fully compliant with Egyptian Tax Authority (ETA) requirements for electronic receipts.',
+        icon: 'receipt_long',
+        class: 'bg-emerald-50 text-emerald-900',
     },
     {
-        title: 'Sales Analytics',
-        description: 'Understand your business with detailed reports and visual insights.',
-        icon: '📊',
-    },
-    {
-        title: 'Multi-currency Support',
-        description: 'Handle multiple currencies and payment methods seamlessly.',
-        icon: '💱',
-    },
-    {
-        title: 'Cloud-based Access',
-        description: 'Access your business from anywhere, on any device, at any time.',
-        icon: '☁️',
+        title: 'Advanced Inventory',
+        description: 'Track thousands of products across multiple branches with real-time stock alerts.',
+        icon: 'inventory_2',
+        span: 'lg:col-span-2',
+        class: 'bg-white border',
     },
 ]
 
 const plans = [
     {
-        name: 'Starter',
-        price: '$29',
+        name: 'Basic',
+        price: 'EGP 499',
         period: '/month',
-        features: ['Up to 500 transactions/mo', 'Basic reports', 'Single user', 'Email support'],
+        desc: 'Ideal for small kiosks',
+        features: ['1 Cashier Terminal', '500 Products', 'Daily Sales Reports'],
+        cta: 'Select Basic',
+        popular: false,
     },
     {
-        name: 'Business',
-        price: '$79',
+        name: 'Advanced',
+        price: 'EGP 999',
         period: '/month',
+        desc: 'For growing retailers',
+        features: ['5 Cashier Terminals', 'Unlimited Products', 'Inventory Management', 'Customer Loyalty Program'],
+        cta: 'Select Advanced',
         popular: true,
-        features: ['Unlimited transactions', 'Advanced analytics', 'Up to 5 users', 'Priority support', 'Inventory management'],
     },
     {
-        name: 'Enterprise',
-        price: '$199',
+        name: 'Pro',
+        price: 'EGP 1999',
         period: '/month',
-        features: ['Everything in Business', 'Unlimited users', 'API access', 'Dedicated support', 'Custom integrations'],
+        desc: 'For multi-branch chains',
+        features: ['Unlimited Terminals', 'Multi-Branch Sync', 'Custom API Integration', '24/7 Priority Support'],
+        cta: 'Contact Sales',
+        popular: false,
     },
 ]
 </script>
@@ -75,190 +80,179 @@ const plans = [
 <template>
     <Head title="Welcome">
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     </Head>
 
-    <div class="flex min-h-screen flex-col bg-white dark:bg-[#0a0a0a]" :dir="dir">
-        <!-- Navbar -->
-        <header class="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-[#0a0a0a]/80">
-            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                <Link :href="dashboard()" class="flex items-center gap-2 font-bold text-xl">
-                    <span class="text-blue-600">POS</span>
-                    <span class="text-gray-900 dark:text-white">System</span>
-                </Link>
-
-                <nav class="flex items-center gap-4">
-                    <Link
-                        v-if="page.props.auth?.user"
-                        :href="dashboard()"
-                        class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-                    >
-                        Dashboard
+    <div class="min-h-screen bg-background text-on-surface" :dir="dir">
+        <!-- Top Navigation -->
+        <header class="sticky top-0 z-40 bg-surface border-b border-outline-variant">
+            <nav class="flex items-center justify-between h-16 px-6 max-w-[1440px] mx-auto">
+                <span class="text-xl font-black text-primary">SmartPOS Egypt</span>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="#hero" class="text-primary font-bold border-b-2 border-primary text-sm">Home</a>
+                    <a href="#pricing" class="text-on-surface-variant hover:text-primary transition-colors text-sm">Pricing</a>
+                    <Link :href="registerRoute()" class="bg-secondary text-white px-6 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity">
+                        Get Started
                     </Link>
-                    <template v-else>
-                        <Link
-                            :href="login()"
-                            class="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-                        >
-                            Log in
-                        </Link>
-                        <Link
-                            v-if="canRegister"
-                            :href="register()"
-                            class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-                        >
-                            Register
-                        </Link>
-                    </template>
-                </nav>
-            </div>
+                </div>
+                <span class="material-symbols-outlined text-primary md:hidden">menu</span>
+            </nav>
         </header>
 
-        <!-- Hero -->
-        <section class="relative overflow-hidden px-4 py-20 sm:px-6 sm:py-32 lg:px-8">
-            <div class="absolute inset-0 -z-10 bg-[radial-gradient(45%_40%_at_50%_60%,rgba(59,130,246,0.12),transparent)] dark:bg-[radial-gradient(45%_40%_at_50%_60%,rgba(59,130,246,0.08),transparent)]" />
-            <div class="mx-auto max-w-4xl text-center">
-                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white">
-                    Modern Point of Sale
-                    <span class="text-blue-600">for Your Business</span>
-                </h1>
-                <p class="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
-                    A powerful, cloud-based POS system that helps you manage sales, inventory, customers, and staff — all from one intuitive dashboard.
-                </p>
-                <div class="mt-10 flex items-center justify-center gap-4">
-                    <Link
-                        v-if="canRegister"
-                        :href="register()"
-                        class="rounded-lg bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-                    >
-                        Get Started Free
-                    </Link>
-                    <Link
-                        :href="login()"
-                        class="rounded-lg border border-gray-300 px-8 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900 transition-colors"
-                    >
-                        Sign In
-                    </Link>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features -->
-        <section class="border-t border-gray-200 px-4 py-20 sm:px-6 lg:px-8 dark:border-gray-800">
-            <div class="mx-auto max-w-7xl">
-                <div class="mx-auto max-w-2xl text-center">
-                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
-                        Everything you need to run your business
-                    </h2>
-                    <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                        Comprehensive tools designed for modern retail and hospitality.
-                    </p>
-                </div>
-                <div class="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                    <div
-                        v-for="feature in features"
-                        :key="feature.title"
-                        class="group rounded-xl border border-gray-200 p-6 transition-all hover:border-blue-200 hover:shadow-md dark:border-gray-800 dark:hover:border-blue-900"
-                    >
-                        <div class="mb-4 text-3xl">{{ feature.icon }}</div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            {{ feature.title }}
-                        </h3>
-                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            {{ feature.description }}
+        <main>
+            <!-- Hero Section -->
+            <section id="hero" class="relative overflow-hidden bg-primary py-24 md:py-32">
+                <div class="max-w-[1440px] mx-auto px-6 relative z-10 grid md:grid-cols-2 gap-8 items-center">
+                    <div class="text-left space-y-6">
+                        <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight">
+                            Powering Egypt's <span class="text-emerald-400">Retail Revolution</span>
+                        </h1>
+                        <p class="text-lg text-indigo-200/90 max-w-lg">
+                            A robust, bilingual POS solution designed for the speed of Egyptian commerce. Trusted by thousands of stores from Cairo to Alexandria.
                         </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Pricing -->
-        <section class="border-t border-gray-200 px-4 py-20 sm:px-6 lg:px-8 dark:border-gray-800">
-            <div class="mx-auto max-w-7xl">
-                <div class="mx-auto max-w-2xl text-center">
-                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
-                        Simple, transparent pricing
-                    </h2>
-                    <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                        Choose the plan that fits your business. No hidden fees.
-                    </p>
-                </div>
-                <div class="mt-16 grid gap-8 lg:grid-cols-3">
-                    <div
-                        v-for="plan in plans"
-                        :key="plan.name"
-                        :class="[
-                            'relative rounded-xl border p-8 transition-all',
-                            plan.popular
-                                ? 'border-blue-600 shadow-lg shadow-blue-600/10 scale-105'
-                                : 'border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-900',
-                        ]"
-                    >
-                        <div v-if="plan.popular" class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold text-white">
-                            Most Popular
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <Link :href="registerRoute()" class="bg-secondary text-white px-8 py-3 rounded-xl text-lg font-semibold text-center transition-transform active:scale-95 hover:opacity-90">
+                                Start Free Trial
+                            </Link>
+                            <a href="#pricing" class="border border-indigo-400/30 text-white px-8 py-3 rounded-xl text-lg font-semibold text-center hover:bg-white/10 transition-colors">
+                                View Plans
+                            </a>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ plan.name }}</h3>
-                        <p class="mt-4">
-                            <span class="text-4xl font-bold text-gray-900 dark:text-white">{{ plan.price }}</span>
-                            <span class="text-sm text-gray-500">{{ plan.period }}</span>
-                        </p>
-                        <ul class="mt-6 space-y-3">
-                            <li
-                                v-for="feat in plan.features"
-                                :key="feat"
-                                class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
-                            >
-                                <svg class="h-4 w-4 flex-shrink-0 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                {{ feat }}
-                            </li>
-                        </ul>
-                        <Link
-                            v-if="canRegister"
-                            :href="register()"
-                            :class="[
-                                'mt-8 block w-full rounded-lg py-2.5 text-center text-sm font-semibold transition-colors',
-                                plan.popular
-                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900',
-                            ]"
-                        >
-                            Get Started
-                        </Link>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20 shadow-2xl">
+                            <div class="bg-white/5 rounded-lg h-64 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-6xl text-indigo-300/50">dashboard</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- CTA -->
-        <section class="bg-blue-600 px-4 py-20 sm:px-6 lg:px-8">
-            <div class="mx-auto max-w-2xl text-center">
-                <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Ready to transform your business?
-                </h2>
-                <p class="mt-4 text-lg text-blue-100">
-                    Join thousands of businesses already using POS System to streamline their operations.
-                </p>
-                <div class="mt-10">
-                    <Link
-                        v-if="canRegister"
-                        :href="register()"
-                        class="inline-flex items-center rounded-lg bg-white px-8 py-3 text-sm font-semibold text-blue-600 shadow-sm hover:bg-blue-50 transition-colors"
-                    >
-                        Start Free Trial
-                    </Link>
+            <!-- Bento Features -->
+            <section class="py-24 bg-background">
+                <div class="max-w-[1440px] mx-auto px-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div v-for="f in features" :key="f.title" :class="[f.span || '', f.class, 'p-8 rounded-xl flex flex-col justify-between min-h-[200px]']">
+                            <span class="material-symbols-outlined text-4xl mb-4" :class="f.class.includes('text-white') ? 'text-emerald-400' : 'text-secondary'">{{ f.icon }}</span>
+                            <div>
+                                <h3 class="text-xl font-semibold" :class="f.class.includes('text-white') ? '' : 'text-primary'">{{ f.title }}</h3>
+                                <p class="mt-2 text-sm" :class="f.class.includes('text-white') ? 'text-white/80' : 'text-on-surface-variant'">{{ f.description }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            <!-- Pricing -->
+            <section id="pricing" class="py-24 bg-surface-container-low">
+                <div class="max-w-[1440px] mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl md:text-4xl font-bold text-primary">Simple, Transparent Pricing</h2>
+                        <p class="text-lg text-on-surface-variant mt-2">Choose the plan that fits your business scale.</p>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div v-for="plan in plans" :key="plan.name"
+                            class="bg-white p-8 rounded-xl border flex flex-col relative"
+                            :class="plan.popular ? 'border-2 border-secondary shadow-xl scale-105 z-10' : 'border-outline-variant hover:shadow-lg transition-shadow'"
+                        >
+                            <div v-if="plan.popular" class="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-white px-4 py-1 rounded-full text-sm font-bold">
+                                Most Popular
+                            </div>
+                            <div class="mb-6">
+                                <h3 class="text-2xl font-semibold text-primary">{{ plan.name }}</h3>
+                                <p class="text-sm text-on-surface-variant">{{ plan.desc }}</p>
+                            </div>
+                            <div class="mb-6">
+                                <span class="text-4xl font-bold text-primary">{{ plan.price }}</span>
+                                <span class="text-on-surface-variant text-sm">{{ plan.period }}</span>
+                            </div>
+                            <ul class="space-y-3 mb-8 flex-1">
+                                <li v-for="feat in plan.features" :key="feat" class="flex items-center gap-2 text-sm">
+                                    <span class="material-symbols-outlined text-secondary text-base">check_circle</span>
+                                    {{ feat }}
+                                </li>
+                            </ul>
+                            <button class="w-full py-2.5 rounded-lg font-bold transition-all text-sm"
+                                :class="plan.popular ? 'bg-secondary text-white hover:opacity-90' : 'border border-primary text-primary hover:bg-primary/5'"
+                            >
+                                {{ plan.cta }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Signup Form -->
+            <section class="py-24 bg-primary relative overflow-hidden">
+                <div class="max-w-[1440px] mx-auto px-6 grid md:grid-cols-2 gap-8 items-center">
+                    <div class="text-white">
+                        <h2 class="text-3xl md:text-4xl font-bold">Ready to grow your business?</h2>
+                        <p class="text-lg mt-4 text-indigo-200/80">Join over 5,000 Egyptian merchants who modernized their operations with SmartPOS. Start your 14-day free trial today.</p>
+                        <div class="mt-8 flex flex-col gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-emerald-400">verified_user</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold">Secure Data</h4>
+                                    <p class="text-sm text-indigo-200/70">Bank-level encryption for all your records.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-emerald-400">support_agent</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold">Local Support</h4>
+                                    <p class="text-sm text-indigo-200/70">Dedicated team in Cairo and Alexandria.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-2xl">
+                        <form class="space-y-4">
+                            <div>
+                                <Label for="welcome-store-name">Store Name</Label>
+                                <Input id="welcome-store-name" placeholder="e.g. Al-Amal Supermarket" />
+                            </div>
+                            <div>
+                                <Label for="welcome-owner-name">Owner Name</Label>
+                                <Input id="welcome-owner-name" placeholder="Full Name" />
+                            </div>
+                            <div>
+                                <Label for="welcome-email">Email Address</Label>
+                                <Input id="welcome-email" type="email" placeholder="name@example.com" />
+                            </div>
+                            <div>
+                                <Label for="welcome-password">Password</Label>
+                                <Input id="welcome-password" type="password" placeholder="Min. 8 characters" />
+                            </div>
+                            <Link :href="registerRoute()" class="w-full block">
+                                <Button class="w-full py-3 text-lg font-semibold bg-secondary hover:opacity-90">
+                                    Create Account
+                                </Button>
+                            </Link>
+                            <p class="text-center text-sm text-on-surface-variant mt-4">
+                                By signing up, you agree to our <a href="#" class="text-primary underline">Terms of Service</a>.
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
 
         <!-- Footer -->
-        <footer class="border-t border-gray-200 px-4 py-8 dark:border-gray-800">
-            <div class="mx-auto flex max-w-7xl items-center justify-between text-sm text-gray-500">
-                <p>&copy; {{ new Date().getFullYear() }} POS System. All rights reserved.</p>
-                <div class="flex items-center gap-4">
-                    <Link :href="login()" class="hover:text-gray-700 dark:hover:text-gray-300">Log in</Link>
-                    <Link v-if="canRegister" :href="register()" class="hover:text-gray-700 dark:hover:text-gray-300">Register</Link>
+        <footer class="bg-surface-container-highest py-6 border-t border-outline-variant">
+            <div class="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex flex-col items-center md:items-start">
+                    <span class="text-xl font-black text-primary">SmartPOS Egypt</span>
+                    <p class="text-sm text-on-surface-variant mt-1">&copy; {{ new Date().getFullYear() }} SmartPOS Tech Solutions. All rights reserved.</p>
+                </div>
+                <div class="flex gap-6">
+                    <a href="#" class="text-on-surface-variant hover:text-primary text-sm">Privacy Policy</a>
+                    <a href="#" class="text-on-surface-variant hover:text-primary text-sm">Terms</a>
+                    <a href="#" class="text-on-surface-variant hover:text-primary text-sm">Contact Us</a>
                 </div>
             </div>
         </footer>

@@ -31,8 +31,9 @@ defineProps<{
 
     <div
         v-if="status"
-        class="mb-4 text-center text-sm font-medium text-green-600"
+        class="mb-4 flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-400"
     >
+        <span class="material-symbols-outlined text-base">check_circle</span>
         {{ status }}
     </div>
 
@@ -44,7 +45,12 @@ defineProps<{
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">mail</span>
+                        Email address
+                    </span>
+                </Label>
                 <Input
                     id="email"
                     type="email"
@@ -60,7 +66,12 @@ defineProps<{
 
             <div class="grid gap-2">
                 <div class="flex items-center justify-between">
-                    <Label for="password">Password</Label>
+                    <Label for="password">
+                        <span class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm text-muted-foreground">lock</span>
+                            Password
+                        </span>
+                    </Label>
                     <TextLink
                         v-if="canResetPassword"
                         :href="request()"
@@ -82,9 +93,9 @@ defineProps<{
             </div>
 
             <div class="flex items-center justify-between">
-                <Label for="remember" class="flex items-center space-x-3">
+                <Label for="remember" class="flex items-center gap-3 cursor-pointer">
                     <Checkbox id="remember" name="remember" :tabindex="3" />
-                    <span>Remember me</span>
+                    <span class="text-sm">Remember me</span>
                 </Label>
             </div>
 
@@ -95,7 +106,8 @@ defineProps<{
                 :disabled="processing"
                 data-test="login-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" class="mr-2" />
+                <span class="material-symbols-outlined text-sm mr-1">login</span>
                 Log in
             </Button>
         </div>

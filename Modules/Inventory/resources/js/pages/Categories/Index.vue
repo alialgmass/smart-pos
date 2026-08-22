@@ -21,6 +21,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { store, destroy } from '@/routes/inventory/categories';
 
 interface Category {
     id: number;
@@ -38,7 +39,7 @@ const form = useForm({
 });
 
 const createCategory = () => {
-    form.post(route('inventory.categories.store'), {
+    form.post(store.url(), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
@@ -52,7 +53,7 @@ const deleteCategory = (category: Category) => {
     }
 
     if (confirm(`Delete category "${category.name}"?`)) {
-        useForm({}).delete(route('inventory.categories.destroy', category.id), {
+        useForm({}).delete(destroy.url({ category: category.id }), {
             preserveScroll: true,
         });
     }

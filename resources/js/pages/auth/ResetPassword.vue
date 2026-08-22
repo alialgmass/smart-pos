@@ -35,7 +35,12 @@ const inputEmail = ref(props.email);
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">Email</Label>
+                <Label for="email">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">mail</span>
+                        Email
+                    </span>
+                </Label>
                 <Input
                     id="email"
                     type="email"
@@ -49,20 +54,30 @@ const inputEmail = ref(props.email);
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Password</Label>
+                <Label for="password">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">lock</span>
+                        New Password
+                    </span>
+                </Label>
                 <PasswordInput
                     id="password"
                     name="password"
                     autocomplete="new-password"
                     class="mt-1 block w-full"
                     autofocus
-                    placeholder="Password"
+                    placeholder="New password"
                 />
                 <InputError :message="errors.password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation"> Confirm password </Label>
+                <Label for="password_confirmation">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">lock</span>
+                        Confirm password
+                    </span>
+                </Label>
                 <PasswordInput
                     id="password_confirmation"
                     name="password_confirmation"
@@ -79,7 +94,8 @@ const inputEmail = ref(props.email);
                 :disabled="processing"
                 data-test="reset-password-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" class="mr-2" />
+                <span class="material-symbols-outlined text-sm mr-1">key</span>
                 Reset password
             </Button>
         </div>

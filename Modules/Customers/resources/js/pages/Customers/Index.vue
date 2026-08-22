@@ -21,6 +21,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { index as indexRoute, store, show, debts } from '@/routes/customers';
 
 interface Customer {
     id: number;
@@ -33,11 +34,9 @@ interface Customer {
 const props = defineProps<{
     customers: {
         data: Customer[];
-        meta: {
-            current_page: number;
-            last_page: number;
-            total: number;
-        };
+        current_page: number;
+        last_page: number;
+        total: number;
     };
 }>();
 
@@ -47,7 +46,7 @@ const form = useForm({
 });
 
 const createCustomer = () => {
-    form.post(route('customers.store'), {
+    form.post(store.url(), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
@@ -63,37 +62,43 @@ const createCustomer = () => {
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold">Customers</h1>
 
-            <Dialog>
-                <DialogTrigger as-child>
-                    <Button>Add Customer</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create Customer</DialogTitle>
-                        <DialogDescription>
-                            Add a new customer to your directory.
-                        </DialogDescription>
-                    </DialogHeader>
+            <div class="flex items-center gap-3">
+                <Link :href="debts.url()">
+                    <Button variant="outline">Manage Debts</Button>
+                </Link>
 
-                    <form @submit.prevent="createCustomer" class="grid gap-4">
-                        <div class="grid gap-2">
-                            <Label for="name">Name</Label>
-                            <Input id="name" v-model="form.name" required />
-                        </div>
-                        <div class="grid gap-2">
-                            <Label for="phone">Phone</Label>
-                            <Input id="phone" v-model="form.phone" required />
-                        </div>
+                <Dialog>
+                    <DialogTrigger as-child>
+                        <Button>Add Customer</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create Customer</DialogTitle>
+                            <DialogDescription>
+                                Add a new customer to your directory.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                        <DialogFooter>
-                            <Button type="submit" :disabled="form.processing">
-                                <Spinner v-if="form.processing" />
-                                Save
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                        <form @submit.prevent="createCustomer" class="grid gap-4">
+                            <div class="grid gap-2">
+                                <Label for="name">Name</Label>
+                                <Input id="name" v-model="form.name" required />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="phone">Phone</Label>
+                                <Input id="phone" v-model="form.phone" required />
+                            </div>
+
+                            <DialogFooter>
+                                <Button type="submit" :disabled="form.processing">
+                                    <Spinner v-if="form.processing" />
+                                    Save
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
 
         <div class="rounded-md border">
@@ -114,7 +119,7 @@ const createCustomer = () => {
                         <TableCell>${{ customer.debt_balance }}</TableCell>
                         <TableCell>{{ customer.loyalty_points }}</TableCell>
                         <TableCell class="text-right">
-                            <Link :href="route('customers.show', customer.id)">
+                            <Link :href="show.url({ customer: customer.id })">
                                 <Button variant="outline" size="sm">View</Button>
                             </Link>
                         </TableCell>
@@ -123,13 +128,13 @@ const createCustomer = () => {
             </Table>
         </div>
 
-        <div v-if="customers.meta.last_page > 1" class="flex justify-center gap-2">
+        <div v-if="customers.last_page > 1" class="flex justify-center gap-2">
             <Link
-                v-for="page in customers.meta.last_page"
+                v-for="page in customers.last_page"
                 :key="page"
-                :href="route('customers.index', { page })"
+                :href="indexRoute.url({ query: { page } })"
                 class="rounded-md px-3 py-1 text-sm"
-                :class="page === customers.meta.current_page ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
+                :class="page === customers.current_page ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
             >
                 {{ page }}
             </Link>

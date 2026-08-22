@@ -3,6 +3,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { profit } from '@/routes/reports';
 
 const props = defineProps<{
     report: {
@@ -22,7 +23,7 @@ const form = useForm({
 });
 
 const search = () => {
-    form.get(route('reports.profit'), {
+    form.get(profit.url(), {
         preserveState: true,
         preserveScroll: true,
     });

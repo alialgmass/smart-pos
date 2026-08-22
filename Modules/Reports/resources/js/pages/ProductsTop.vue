@@ -11,6 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { topProducts } from '@/routes/reports';
 
 interface Product {
     product_id: number | null;
@@ -35,7 +36,7 @@ const form = useForm({
 });
 
 const search = () => {
-    form.get(route('reports.top-products'), {
+    form.get(topProducts.url(), {
         preserveState: true,
         preserveScroll: true,
     });

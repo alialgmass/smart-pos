@@ -165,7 +165,7 @@ description: "Executable task plan for POS SaaS Phase 1 using nwidart/laravel-mo
 - [X] T093 [US4] Create `Modules/Sales/app/Actions/ProcessReturnAction.php` and integrate it with `Modules/Inventory/app/Actions/UpdateStockAction.php`
 - [X] T094 [US4] Create controllers in `Modules/Customers/app/Http/Controllers/CustomerController.php`, `CustomerSearchController.php`, and `DebtPaymentController.php`
 - [X] T095 [US4] Create customer pages in `Modules/Customers/resources/js/pages/Customers/Index.vue`, `Show.vue`, and `DebtManagement.vue`
-- [ ] T096 [US4] Extend `Modules/Sales/resources/js/pages/Pos/PaymentModal.vue` with deferred payment tab and customer-required validation
+- [X] T096 [US4] Extend `Modules/Sales/resources/js/pages/Pos/PaymentModal.vue` with deferred payment tab and customer-required validation
 - [X] T097 [US4] Create module routes in `Modules/Customers/routes/web.php` and `Modules/Customers/routes/api.php`
 
 ## Phase 7: User Story 5 - Restaurant Orders (Priority: P2)

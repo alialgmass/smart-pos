@@ -29,7 +29,12 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="store_name">Store name</Label>
+                <Label for="store_name">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">store</span>
+                        Store name
+                    </span>
+                </Label>
                 <Input
                     id="store_name"
                     type="text"
@@ -44,7 +49,12 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="owner_name">Owner name</Label>
+                <Label for="owner_name">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">person</span>
+                        Owner name
+                    </span>
+                </Label>
                 <Input
                     id="owner_name"
                     type="text"
@@ -58,7 +68,12 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">mail</span>
+                        Email address
+                    </span>
+                </Label>
                 <Input
                     id="email"
                     type="email"
@@ -72,7 +87,12 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Password</Label>
+                <Label for="password">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">lock</span>
+                        Password
+                    </span>
+                </Label>
                 <PasswordInput
                     id="password"
                     required
@@ -85,7 +105,12 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
+                <Label for="password_confirmation">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-muted-foreground">lock</span>
+                        Confirm password
+                    </span>
+                </Label>
                 <PasswordInput
                     id="password_confirmation"
                     required
@@ -104,7 +129,8 @@ defineOptions({
                 :disabled="processing"
                 data-test="register-user-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" class="mr-2" />
+                <span class="material-symbols-outlined text-sm mr-1">person_add</span>
                 Create account
             </Button>
         </div>

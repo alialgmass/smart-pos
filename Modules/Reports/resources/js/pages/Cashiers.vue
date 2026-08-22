@@ -11,6 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { cashiers } from '@/routes/reports';
 
 interface CashierRow {
     user_id: number;
@@ -36,7 +37,7 @@ const form = useForm({
 });
 
 const search = () => {
-    form.get(route('reports.cashiers'), {
+    form.get(cashiers.url(), {
         preserveState: true,
         preserveScroll: true,
     });

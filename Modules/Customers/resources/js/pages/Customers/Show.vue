@@ -29,6 +29,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { index as indexRoute } from '@/routes/customers';
+import { store as paymentStore } from '@/routes/customers/debt-payments';
 
 interface DebtPayment {
     id: number;
@@ -83,7 +85,7 @@ const payDebt = (debtId: number) => {
 };
 
 const submitPayment = () => {
-    form.post(route('customers.debt-payments.store'), {
+    form.post(paymentStore.url(), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
@@ -117,7 +119,7 @@ const paymentMethodLabel = (method: number) => {
 
     <div class="flex flex-col gap-6 p-6">
         <div class="flex items-center gap-4">
-            <Link :href="route('customers.index')">
+            <Link :href="indexRoute.url()">
                 <Button variant="outline">&larr; Back</Button>
             </Link>
             <h1 class="text-2xl font-bold">{{ customer.name }}</h1>

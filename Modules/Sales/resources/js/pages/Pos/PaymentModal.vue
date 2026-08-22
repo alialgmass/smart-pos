@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
+import { search as customerSearch } from '@/routes/customers'
 import axios from 'axios'
 
 interface Customer {
@@ -19,15 +24,23 @@ const emit = defineEmits<{
         paymentMethod: number
         paidAmount: number
         changeAmount: number
+        cashAmount?: number
+        cardAmount?: number
         customerId?: number
         customerName?: string
     }]
     close: []
 }>()
 
-const paymentMethod = ref(1)
-const paidAmount = ref(0)
+const activeTab = ref(1)
+const paidAmount = ref(props.total)
+const cashAmount = ref(0)
+const cardAmount = ref(0)
 const calculatedChange = computed(() => Math.max(0, paidAmount.value - props.total))
+const mixedRemaining = computed(() => {
+    const totalPaid = (cashAmount.value || 0) + (cardAmount.value || 0)
+    return Math.max(0, props.total - totalPaid)
+})
 
 // Deferred payment state
 const customerQuery = ref('')
@@ -37,9 +50,10 @@ const searching = ref(false)
 const showResults = ref(false)
 
 const DEFFERED_METHOD_ID = 4
+const dueDate = ref('')
 
 watch(customerQuery, async (query) => {
-    if (paymentMethod.value !== DEFFERED_METHOD_ID || !query || query.length < 1) {
+    if (activeTab.value !== DEFFERED_METHOD_ID || !query || query.length < 1) {
         customerResults.value = []
         showResults.value = false
         return
@@ -49,7 +63,7 @@ watch(customerQuery, async (query) => {
     showResults.value = true
 
     try {
-        const res = await axios.get(route('customers.search'), {
+        const res = await axios.get(customerSearch.url(), {
             params: { q: query },
         })
         customerResults.value = res.data.customers ?? []
@@ -73,13 +87,30 @@ function clearCustomer() {
 }
 
 function handleConfirm() {
-    emit('complete', {
-        paymentMethod: paymentMethod.value,
-        paidAmount: paidAmount.value,
-        changeAmount: calculatedChange.value,
-        customerId: paymentMethod.value === DEFFERED_METHOD_ID ? selectedCustomer.value?.id : undefined,
-        customerName: paymentMethod.value === DEFFERED_METHOD_ID ? selectedCustomer.value?.name : undefined,
-    })
+    if (activeTab.value === DEFFERED_METHOD_ID) {
+        emit('complete', {
+            paymentMethod: DEFFERED_METHOD_ID,
+            paidAmount: props.total,
+            changeAmount: 0,
+            customerId: selectedCustomer.value?.id,
+            customerName: selectedCustomer.value?.name,
+        })
+    } else if (activeTab.value === 3) {
+        // Mixed payment
+        emit('complete', {
+            paymentMethod: 3,
+            paidAmount: (cashAmount.value || 0) + (cardAmount.value || 0),
+            changeAmount: 0,
+            cashAmount: cashAmount.value,
+            cardAmount: cardAmount.value,
+        })
+    } else {
+        emit('complete', {
+            paymentMethod: activeTab.value,
+            paidAmount: paidAmount.value,
+            changeAmount: calculatedChange.value,
+        })
+    }
 }
 
 function handleClose() {
@@ -87,144 +118,269 @@ function handleClose() {
 }
 
 const canConfirm = computed(() => {
-    if (paymentMethod.value === DEFFERED_METHOD_ID) {
-        return !!selectedCustomer.value
+    switch (activeTab.value) {
+        case DEFFERED_METHOD_ID:
+            return !!selectedCustomer.value
+        case 3: // Mixed
+            return (cashAmount.value || 0) + (cardAmount.value || 0) >= props.total
+        default:
+            return paidAmount.value > 0 && paidAmount.value >= props.total
     }
-    return paidAmount.value > 0 && paidAmount.value >= props.total
 })
 
-const methods = [
-    { id: 1, label: 'Cash' },
-    { id: 2, label: 'Card' },
-    { id: 3, label: 'Mixed' },
-    { id: 4, label: 'Deferred' },
+const tabs = [
+    { id: 1, label: 'Cash', icon: 'payments' },
+    { id: 2, label: 'Card', icon: 'credit_card' },
+    { id: 3, label: 'Mixed', icon: 'account_balance_wallet' },
+    { id: 4, label: 'Deferred (آجل)', icon: 'event_repeat' },
 ]
 </script>
 
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">Payment</h2>
-                <button class="text-gray-400 hover:text-gray-600 text-xl leading-none" @click="handleClose">&times;</button>
-            </div>
-
-            <div class="text-center mb-4">
-                <p class="text-sm text-gray-500">Total Amount</p>
-                <p class="text-3xl font-bold text-gray-800">{{ Number(total).toFixed(2) }}</p>
-            </div>
-
-            <div class="mb-4">
-                <p class="text-sm font-medium text-gray-700 mb-2">Payment Method</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button
-                        v-for="method in methods"
-                        :key="method.id"
-                        :class="[
-                            'px-4 py-2 rounded-lg text-sm font-medium border transition-colors',
-                            paymentMethod === method.id
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-                        ]"
-                        @click="paymentMethod = method.id"
-                    >
-                        {{ method.label }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- Standard payment input (hidden for deferred) -->
-            <div v-if="paymentMethod !== DEFFERED_METHOD_ID" class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Amount Paid</label>
-                <input
-                    v-model.number="paidAmount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter amount"
-                />
-                <p v-if="paidAmount > 0 && paidAmount < total" class="text-xs text-orange-500 mt-1">
-                    Insufficient amount
-                </p>
-                <p v-if="calculatedChange > 0" class="text-sm text-green-600 mt-1">
-                    Change: {{ calculatedChange.toFixed(2) }}
-                </p>
-            </div>
-
-            <!-- Deferred payment: customer selection -->
-            <div v-if="paymentMethod === DEFFERED_METHOD_ID" class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Customer <span class="text-red-500">*</span>
-                </label>
-
-                <div v-if="!selectedCustomer" class="relative">
-                    <input
-                        v-model="customerQuery"
-                        type="text"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Search by name or phone..."
-                        autocomplete="off"
-                    />
-
-                    <div
-                        v-if="showResults && customerQuery.length > 0"
-                        class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10"
-                    >
-                        <div v-if="searching" class="px-4 py-3 text-sm text-gray-500 text-center">
-                            Searching...
-                        </div>
-                        <div
-                            v-else-if="customerResults.length === 0"
-                            class="px-4 py-3 text-sm text-gray-500 text-center"
-                        >
-                            No customers found
-                        </div>
-                        <button
-                            v-for="customer in customerResults"
-                            :key="customer.id"
-                            class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between"
-                            @click="selectCustomer(customer)"
-                        >
-                            <span class="font-medium">{{ customer.name }}</span>
-                            <span class="text-gray-400">{{ customer.phone }}</span>
-                        </button>
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm">
+        <div class="bg-surface-container-lowest w-[700px] max-w-[95vw] rounded-xl shadow-2xl overflow-hidden flex flex-col border border-outline-variant">
+            <!-- Modal Header -->
+            <div class="bg-primary p-lg text-on-primary flex justify-between items-center">
+                <div>
+                    <h2 class="text-headline-md font-headline-md">Payment Details</h2>
+                    <div v-if="selectedCustomer" class="flex items-center gap-sm mt-xs opacity-80">
+                        <span class="material-symbols-outlined text-[18px]">person</span>
+                        <p class="text-label-md">Customer: <span class="font-bold underline">{{ selectedCustomer.name }}</span></p>
                     </div>
                 </div>
-
-                <div v-else class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2">
-                    <div>
-                        <p class="text-sm font-medium text-gray-800">{{ selectedCustomer.name }}</p>
-                        <p class="text-xs text-gray-500">{{ selectedCustomer.phone }}</p>
-                    </div>
-                    <button
-                        class="text-gray-400 hover:text-gray-600 text-sm"
-                        @click="clearCustomer"
-                    >
-                        Change
-                    </button>
+                <div class="text-right">
+                    <p class="text-label-md font-medium opacity-80">Payable Amount</p>
+                    <p class="text-display-lg font-numeric-pos leading-none">{{ Number(total).toFixed(2) }} <span class="text-headline-sm">EGP</span></p>
                 </div>
-
-                <p class="text-xs text-gray-500 mt-2">
-                    Deferred payment will be recorded as a debt for this customer.
-                </p>
             </div>
 
-            <div class="flex gap-2">
+            <!-- Tab Navigation -->
+            <div class="flex bg-surface-container-low border-b border-outline-variant">
                 <button
-                    class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium"
+                    v-for="tab in tabs"
+                    :key="tab.id"
+                    class="flex-1 py-lg px-md flex flex-col items-center gap-sm transition-colors"
+                    :class="activeTab === tab.id
+                        ? 'border-b-4 border-primary text-primary font-bold'
+                        : 'border-b-4 border-transparent text-on-surface-variant hover:bg-surface-container'"
+                    @click="activeTab = tab.id"
+                >
+                    <span class="material-symbols-outlined">{{ tab.icon }}</span>
+                    <span class="font-label-md">{{ tab.label }}</span>
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-xl space-y-lg flex-grow">
+                <!-- Cash Tab -->
+                <div v-if="activeTab === 1" class="space-y-4">
+                    <div class="space-y-sm">
+                        <Label class="block font-label-md text-on-surface font-bold">Amount Received</Label>
+                        <div class="relative group">
+                            <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">payments</div>
+                            <input
+                                v-model.number="paidAmount"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                placeholder="0.00"
+                            />
+                            <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                        </div>
+                    </div>
+                    <div v-if="calculatedChange > 0" class="flex items-center justify-between p-md bg-secondary-container/20 rounded-xl border border-secondary-container">
+                        <span class="font-label-md font-bold text-on-secondary-container">Change Due</span>
+                        <span class="font-numeric-pos text-secondary text-headline-sm">{{ calculatedChange.toFixed(2) }} EGP</span>
+                    </div>
+                </div>
+
+                <!-- Card Tab -->
+                <div v-if="activeTab === 2" class="space-y-4">
+                    <div class="space-y-sm">
+                        <Label class="block font-label-md text-on-surface font-bold">Card Amount</Label>
+                        <div class="relative group">
+                            <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">credit_card</div>
+                            <input
+                                v-model.number="paidAmount"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                placeholder="0.00"
+                            />
+                            <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mixed Tab -->
+                <div v-if="activeTab === 3" class="space-y-lg">
+                    <div class="bg-primary-container/10 p-md rounded-lg border border-primary-container/20 flex items-start gap-md">
+                        <span class="material-symbols-outlined text-primary-container">info</span>
+                        <p class="text-label-md text-on-primary-fixed-variant leading-relaxed">
+                            Split the total amount across multiple payment methods. Ensure the sum of all fields equals the total payable amount.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-lg">
+                        <div class="space-y-sm">
+                            <Label class="block font-label-md text-on-surface font-bold">Cash Amount</Label>
+                            <div class="relative group">
+                                <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">payments</div>
+                                <input
+                                    v-model.number="cashAmount"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                    placeholder="0.00"
+                                />
+                                <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                            </div>
+                        </div>
+                        <div class="space-y-sm">
+                            <Label class="block font-label-md text-on-surface font-bold">Card Amount</Label>
+                            <div class="relative group">
+                                <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">credit_card</div>
+                                <input
+                                    v-model.number="cardAmount"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-numeric-pos text-headline-sm transition-all outline-none"
+                                    placeholder="0.00"
+                                />
+                                <span class="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">EGP</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-md rounded-xl"
+                        :class="mixedRemaining <= 0 ? 'bg-secondary-container/20 border border-secondary-container' : 'bg-error-container/20 border border-error-container/30'">
+                        <div class="flex items-center gap-sm">
+                            <span class="material-symbols-outlined" :class="mixedRemaining <= 0 ? 'text-secondary' : 'text-error'">
+                                {{ mixedRemaining <= 0 ? 'check_circle' : 'error' }}
+                            </span>
+                            <span class="font-label-md font-bold uppercase tracking-wide" :class="mixedRemaining <= 0 ? 'text-on-secondary-container' : 'text-on-error-container'">
+                                {{ mixedRemaining <= 0 ? 'Ready to Finalize' : 'Remaining Balance' }}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-numeric-pos text-headline-sm" :class="mixedRemaining <= 0 ? 'text-secondary' : 'text-error'">
+                                {{ Math.max(0, mixedRemaining).toFixed(2) }} EGP
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deferred Tab (T096) -->
+                <div v-if="activeTab === DEFFERED_METHOD_ID" class="space-y-4">
+                    <div class="bg-primary-container/10 p-md rounded-lg border border-primary-container/20 flex items-start gap-md">
+                        <span class="material-symbols-outlined text-primary-container">info</span>
+                        <p class="text-label-md text-on-primary-fixed-variant leading-relaxed">
+                            Deferred payment will be recorded as a debt for this customer. Select a customer to continue.
+                        </p>
+                    </div>
+
+                    <div class="space-y-sm">
+                        <Label class="block font-label-md text-on-surface font-bold">Customer <span class="text-error">*</span></Label>
+
+                        <div v-if="!selectedCustomer" class="relative">
+                            <div class="relative">
+                                <div class="absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">search</div>
+                                <input
+                                    v-model="customerQuery"
+                                    type="text"
+                                    class="w-full pl-xl pr-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-body-md transition-all outline-none"
+                                    placeholder="Search by name or phone..."
+                                    autocomplete="off"
+                                />
+                            </div>
+                            <div
+                                v-if="showResults && customerQuery.length > 0"
+                                class="absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg max-h-48 overflow-y-auto z-10"
+                            >
+                                <div v-if="searching" class="px-4 py-3 text-sm text-muted-foreground text-center">
+                                    Searching...
+                                </div>
+                                <div
+                                    v-else-if="customerResults.length === 0"
+                                    class="px-4 py-3 text-sm text-muted-foreground text-center"
+                                >
+                                    No customers found
+                                </div>
+                                <button
+                                    v-for="customer in customerResults"
+                                    :key="customer.id"
+                                    class="w-full px-4 py-3 text-left text-sm hover:bg-surface-container flex items-center justify-between transition-colors"
+                                    @click="selectCustomer(customer)"
+                                >
+                                    <span class="font-medium">{{ customer.name }}</span>
+                                    <span class="text-muted-foreground">{{ customer.phone }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-else class="flex items-center justify-between bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold">
+                                    {{ selectedCustomer.name.charAt(0).toUpperCase() }}
+                                </div>
+                                <div>
+                                    <p class="font-medium">{{ selectedCustomer.name }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ selectedCustomer.phone }}</p>
+                                </div>
+                            </div>
+                            <button class="text-primary hover:underline font-label-md text-sm" @click="clearCustomer">
+                                Change
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-sm">
+                        <Label class="block font-label-md text-on-surface font-bold">Payment Due Date (Optional)</Label>
+                        <input
+                            v-model="dueDate"
+                            type="date"
+                            class="w-full px-md py-lg bg-surface-container-lowest border-2 border-outline-variant focus:border-primary rounded-xl font-body-md transition-all outline-none"
+                        />
+                    </div>
+
+                    <div class="flex items-center justify-between p-md bg-secondary-container/20 rounded-xl border border-secondary-container">
+                        <div class="flex items-center gap-sm">
+                            <span class="material-symbols-outlined text-secondary">check_circle</span>
+                            <span class="font-label-md font-bold text-on-secondary-container uppercase tracking-wide">Ready to Record</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-on-secondary-container font-bold uppercase">Amount to Defer</p>
+                            <p class="font-numeric-pos text-secondary text-headline-sm">{{ Number(total).toFixed(2) }} EGP</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="p-lg bg-surface-container-low border-t border-outline-variant flex gap-md">
+                <button
+                    class="flex-1 py-lg border-2 border-outline text-outline font-bold rounded-xl hover:bg-surface-container-high transition-colors active:scale-95 transition-transform"
                     @click="handleClose"
                 >
-                    Cancel
+                    Cancel Transaction
                 </button>
                 <button
-                    class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="flex-[2] py-lg bg-primary text-on-primary font-bold text-headline-sm rounded-xl flex items-center justify-center gap-md shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     :disabled="!canConfirm"
                     @click="handleConfirm"
                 >
-                    {{ paymentMethod === DEFFERED_METHOD_ID ? 'Record Debt' : 'Confirm Payment' }}
+                    {{ activeTab === DEFFERED_METHOD_ID ? 'Record Debt' : 'Complete Payment' }}
+                    <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+</style>
