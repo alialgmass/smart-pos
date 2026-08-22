@@ -17,7 +17,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Modules\\Offline\\": "app/",
+            "Modules\\Offline\\": "/",
             "Modules\\Offline\\Database\\Factories\\": "database/factories/",
             "Modules\\Offline\\Database\\Seeders\\": "database/seeders/"
         }
